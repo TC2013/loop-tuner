@@ -49,7 +49,7 @@ interface TempBasal{
 
 
 //Not Data Types
-interface responseSettings{
+interface ResponseSettings{
     url: String
     dateStart: Date
     dateEnd: Date

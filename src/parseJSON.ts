@@ -1,23 +1,14 @@
-export {actionPerformed, getBG}
 
 let profile: any = undefined
 
-async function actionPerformed(options: responseSettings){
+export async function setProfile(options: ResponseSettings){
     if(!profile){
         const response = await fetch(options.url + "api/v1/profile.json?count=10000000")
         profile = (await response.json()).reverse()
     }
-
-    const bgArray = await getBG(options.url, options.dateStart, options.dateEnd)
-    
-    const tempBasalArray = await getTempBasal(options.url, options.dateStart, options.dateEnd)
-
-    const basalProfiles = getBasalProfile(options.dateStart, options.dateEnd)
-    
 }
 
-
-async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<BG>>{
+export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<BG>>{
     const bgUrl = url.concat(
         "api/v1/entries/sgv.json?find[dateString][$gte]=",
         dateStart.toISOString(),
@@ -25,7 +16,6 @@ async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array
         dateEnd.toISOString(),
         "&count=1000000"
     )
-
 
     console.log("Grabbing BGs JSON from Nightscout...")
     
@@ -42,11 +32,10 @@ async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array
         })
     })
 
-
     return bgArray.reverse()
 }
 
-function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile>{
+export function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile>{
     const basalProfiles: Array<any> = []
     
     let start = false
@@ -76,7 +65,7 @@ function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile>{
     return basalProfiles
 }
 
-async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): Promise<Array<TempBasal>>{
+export async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): Promise<Array<TempBasal>>{
     const tempBasalUrl = url.concat(
         "api/v1/treatments.json?find[created_at][$gte]=",
         dateStart.toISOString(),
