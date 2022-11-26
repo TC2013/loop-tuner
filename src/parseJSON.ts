@@ -5,7 +5,6 @@ let profile: any = undefined
 async function actionPerformed(options: responseSettings){
     if(!profile){
         const response = await fetch(options.url + "api/v1/profile.json?count=10000000")
-        console.log(options.url + "api/v1/profile.json?count=10000000")
         profile = (await response.json()).reverse()
     }
 
@@ -73,8 +72,6 @@ function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile>{
             basalProfiles.push(basalProfile)
         }
     }
-
-    console.log(basalProfiles)
 
     return basalProfiles
 }
