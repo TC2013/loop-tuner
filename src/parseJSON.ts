@@ -1,3 +1,4 @@
+import _, { map } from 'underscore';
 
 let profile: any = undefined
 
@@ -8,7 +9,7 @@ export async function setProfile(options: ResponseSettings){
     }
 }
 
-export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<BG>>{
+export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<Array<BG>>>{
     const bgUrl = url.concat(
         "api/v1/entries/sgv.json?find[dateString][$gte]=",
         dateStart.toISOString(),
@@ -32,7 +33,11 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         })
     })
 
-    return bgArray.reverse()
+    let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).groupBy(function(obj) {
+        return obj.time.getDate();
+    }).sortBy(function(v) { return v; })
+    
+    return bgsArray.reverse()
 }
 
 export function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile>{
