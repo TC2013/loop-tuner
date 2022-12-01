@@ -30,7 +30,13 @@ const options: ResponseSettings = {
 
 
     const avgBgArray = calculations.averageBGs(bgArray)
-    charts.renderChart(avgBgArray)
+    const avgBgArrayMinus10 = avgBgArray.map((obj)=>{
+        return {
+            bg: obj.bg - 10,
+            time: obj.time
+        }
+    })
+    charts.renderChart([avgBgArray, avgBgArrayMinus10])
 
     
 })(options)

@@ -18,7 +18,7 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         "&count=1000000"
     )
 
-    console.log("Grabbing BGs JSON from Nightscout...")
+    console.log("Grabbing BGs JSON from Nightscout...", [{bgUrl}])
     
     const response = await fetch(bgUrl)
     const bgJSON = await response.json()
@@ -33,9 +33,9 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         })
     })
 
-    let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).groupBy(function(obj) {
+    let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).flatten(true).groupBy(function(obj) {
         return obj.time.getDate();
-    }).sortBy(function(v) { return v; })
+    }).sortBy(function(v) { return v; }).value()
     
     return bgsArray.reverse()
 }
@@ -79,7 +79,7 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): 
         "&find[eventType]=Temp+Basal"
     )
 
-    console.log("Grabbing Temp Basals from Nightscout...")
+    console.log("Grabbing Temp Basals from Nightscout...", [{tempBasalUrl}])
     const response = await fetch(tempBasalUrl)
     const tempBasalJSON = await response.json()
 
