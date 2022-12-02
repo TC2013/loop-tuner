@@ -4,8 +4,8 @@ import * as calculations from "./calculations"
 
 const options: ResponseSettings = {
     url: "https://canning.herokuapp.com/",
-    dateStart: new Date("2022-11-14T00:00"),
-    dateEnd: new Date("2022-11-25T00:00"),
+    dateStart: new Date("2022-11-29T00:00"),
+    dateEnd: new Date("2022-11-30T00:00"),
     showBasalChart: false,
     showBGChart: true,
     showCOBChart: false,
@@ -24,19 +24,16 @@ const options: ResponseSettings = {
     
     const bgArray = await parseJSON.getBG(options.url, options.dateStart, options.dateEnd)
     
-    const tempBasalArray = await parseJSON.getTempBasal(options.url, options.dateStart, options.dateEnd)
+    const tempBasals = await parseJSON.getTempBasal(options.url, options.dateStart, options.dateEnd)
+    console.log(tempBasals)
 
     const basalProfiles = parseJSON.getBasalProfile(options.dateStart, options.dateEnd)
 
 
     const avgBgArray = calculations.averageBGs(bgArray)
-    const avgBgArrayMinus10 = avgBgArray.map((obj)=>{
-        return {
-            bg: obj.bg - 10,
-            time: obj.time
-        }
-    })
-    charts.renderChart([avgBgArray, avgBgArrayMinus10])
+
+    calculations.getNetBasals(tempBasals, basalProfiles)
+    charts.renderChart(bgArray)
 
     
 })(options)

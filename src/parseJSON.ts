@@ -33,6 +33,7 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         })
     })
 
+    //Split the BGs array into multiple arrays that each contain only a single day's worth of BGs
     let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).flatten(true).groupBy(function(obj) {
         return obj.time.getDate();
     }).sortBy(function(v) { return v; }).value()
@@ -94,7 +95,22 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): 
         })
     })
 
-    return tempBasals.reverse()
+    tempBasals = tempBasals.reverse()
+
+    //Fixup temp basal durations to account for rounding discrepancies and errors in the logging
+    for(let i = 1; i < tempBasals.length; i++){
+        let previousEnd: Date = new Date(tempBasals[i-1].created_at.getTime() + tempBasals[i-1].duration * 60 * 1000)
+        const currentStart: Date = tempBasals[i].created_at
+
+        if(previousEnd > currentStart){
+            const diff: number = (currentStart.getTime() - tempBasals[i-1].created_at.getTime()) / (60 * 1000)
+            tempBasals[i-1].duration = diff
+        }
+        
+    }
+
+
+    return tempBasals
     
 }
 
