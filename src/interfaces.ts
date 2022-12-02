@@ -43,7 +43,7 @@ interface MealBolus{
 
 interface TempBasal{
     readonly rate: number
-    readonly duration: number
+    duration: number
     readonly created_at: Date
 }
 

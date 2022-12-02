@@ -18,7 +18,7 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         "&count=1000000"
     )
 
-    console.log("Grabbing BGs JSON from Nightscout...")
+    console.log("Grabbing BGs JSON from Nightscout...", [{bgUrl}])
     
     const response = await fetch(bgUrl)
     const bgJSON = await response.json()
@@ -33,9 +33,10 @@ export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promis
         })
     })
 
-    let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).groupBy(function(obj) {
+    //Split the BGs array into multiple arrays that each contain only a single day's worth of BGs
+    let bgsArray: Array<Array<BG>> = _.chain(bgArray.reverse()).flatten(true).groupBy(function(obj) {
         return obj.time.getDate();
-    }).sortBy(function(v) { return v; })
+    }).sortBy(function(v) { return v; }).value()
     
     return bgsArray.reverse()
 }
@@ -79,7 +80,7 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): 
         "&find[eventType]=Temp+Basal"
     )
 
-    console.log("Grabbing Temp Basals from Nightscout...")
+    console.log("Grabbing Temp Basals from Nightscout...", [{tempBasalUrl}])
     const response = await fetch(tempBasalUrl)
     const tempBasalJSON = await response.json()
 
@@ -94,7 +95,22 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd:Date): 
         })
     })
 
-    return tempBasals.reverse()
+    tempBasals = tempBasals.reverse()
+
+    //Fixup temp basal durations to account for rounding discrepancies and errors in the logging
+    for(let i = 1; i < tempBasals.length; i++){
+        let previousEnd: Date = new Date(tempBasals[i-1].created_at.getTime() + tempBasals[i-1].duration * 60 * 1000)
+        const currentStart: Date = tempBasals[i].created_at
+
+        if(previousEnd > currentStart){
+            const diff: number = (currentStart.getTime() - tempBasals[i-1].created_at.getTime()) / (60 * 1000)
+            tempBasals[i-1].duration = diff
+        }
+        
+    }
+
+
+    return tempBasals
     
 }
 
