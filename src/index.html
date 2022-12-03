@@ -3,38 +3,124 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- <link rel="stylesheet" href="style.css"> -->
+    <link rel="stylesheet" href="style.css">
+    <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- This JavaScript Bundle with Popper should be added using the installed library instead-->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
     <title>Nightscout Tuner</title>
 </head>
-<style>
-    #url {
-        width: 200px;
-    }
 
-</style>
 <body>
-    <div controls>
+    <div id="left">
         <h1 id="title">Loop Tuner</h1>
-        <label for="url">Nightscout URL:</label>
-        <input type="text" id="url" value="https://canning.herokuapp.com/"><br>
-        <label for="start" class="form">Start:</label>
-        <input type="date" class="form" id="start" name="start" value="2022-11-23"> 
-        <label for="end" class="form">End:</label>
-        <input type="date" class="form" id="end" name="end"value="2022-11-24"> <br>
-        <label for="url" class="form">ISF:</label>
-        <input type="text" class="form" style="width: 25px;" id="url" value="27">      
-        <label for="url" class="form">Weight in Kg:</label>
-        <input type="text" class="form" style="width: 25px;"id="url" value="80">
-        <button type="button" id="Run" onclick="getData()">Go</button>
+
+
+        <div class="chart-card">
+            <div id="chart-container"><canvas id="bgChart"></canvas>
+            </div>
+        </div>
     </div>
-    <div style="width: 1000px;"><canvas id="bgChart"></canvas></div>
+    <!-- Settings Button -->
+    <button type="button" id="settings-button" class="btn btn-secondary" data-bs-toggle="modal"
+        data-bs-target="#exampleModal">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-gear"
+            viewBox="0 0 16 16">
+            <path
+                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z">
+            </path>
+            <path
+                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z">
+            </path>
+        </svg>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Settings</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <label for="url">Nightscout URL:</label><br>
+                        <input type="text" id="url" value="https://canning.herokuapp.com/"><br><br>
+
+                        <label for="days" class="form">Number of days to be included in calculations:</label><br>
+                        <input type="text" class="form" id="days" value="" onchange="setDateRange()"><br><br>
+
+                        <label for="start" class="form">Start:</label> <br>
+                        <input type="date" class="form" id="start" name="start" value="2022-11-23"><br><br>
+
+                        <label for="end" class="form">End:</label><br>
+                        <input type="date" class="form" id="end" name="end" value="2022-11-24"> <br><br>
+
+                        <label for="isf" class="form">Insulin Sensitivity Factor:</label><br>
+                        <input type="text" class="form" id="isf" value="27"><br><br>
+
+                        <label for="weight" class="form">Weight in Kg:</label><br>
+                        <input type="text" class="form" id="weight" value="80"><br><br>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
+                        onClick="setCookie()">Save</button>
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                    <script>
+                        document.getElementById("days").addEventListener("keyup", setDateRange);
+
+                        function setCookie() {
+                            let settings = {}
+                            settings.url = document.querySelector('#url').value
+                            settings.days = document.querySelector('#days').value
+                            settings.isf = document.querySelector('#isf').value
+                            settings.weight = document.querySelector('#weight').value
+
+                            let cookieValue = JSON.stringify(settings)
+                            document.cookie = cookieValue
+                        }
+                        function getCookie() {
+                            if (document.cookie.length != 0) {
+                                var settings = JSON.parse(document.cookie);
+                                document.querySelector('#url').value = settings.url
+                                document.querySelector('#days').value = settings.days
+                                document.querySelector('#isf').value = settings.isf
+                                document.querySelector('#weight').value = settings.weight
+                            }
+
+
+                        } getCookie()
+
+                        function setDateRange() {
+                            let days = document.querySelector('#days').value
+                            let dateStart = new Date()
+                            let dateEnd = new Date()
+                            let dateOffset = (24 * 60 * 60 * 1000) * days
+
+                            dateStart.setTime(dateStart.getTime() - dateOffset)
+                            dateEnd.setTime(dateEnd.getTime() - (24 * 60 * 60 * 1000))
+
+                            document.querySelector('#start').value = dateStart.toISOString().split('T')[0]
+                            document.querySelector('#end').value = dateEnd.toISOString().split('T')[0]
+                        } setDateRange()
+
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="./interfaces.ts"></script>
-    <script type="module" src="./calculations.ts" ></script>
-    <script type="module" src="./parseJSON.ts" ></script>
-    <script type="module" src="./charts.ts" ></script>
-    
+    <script type="module" src="./calculations.ts"></script>
+    <script type="module" src="./parseJSON.ts"></script>
+    <script type="module" src="./charts.ts"></script>
     <script type="module" src="./index.ts"></script>
+    <!-- <script type="module" src="./cookie.ts"></script> -->
 </body>
 
 </html>
