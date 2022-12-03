@@ -1,88 +1,61 @@
-html {
-    box-sizing:border-box;
-    font-size:10px
-   }
-   body,
-   html {
-    align-items:center;
-    background-color:rgb(16, 122, 184);
-    background-image:linear-gradient(#26a,#06a);
-    background-repeat:no-repeat;
-    background-size:cover;
-    color:#fff;
-    display:flex;
-    font-family:"Bree Serif",Arial,sans-serif;
-    height:100%;
-    justify-content:center;
-    margin:0;
-    padding:0;
-    width:100%
-   }
-   h1,
-   h2 {
-    font-weight:700;
-    margin:0 0 2rem;
-    padding:2rem;
-    text-align:center;
-    white-space:pre-wrap
-   }
-   h1 {
-    font-size:4rem
-   }
-   h2 {
-    font-size:2.6rem;
-    font-weight:400
-   }
-   form {
-    border-bottom:2px solid hsla(0,0%,100%,.2);
-    display:flex;
-    margin-bottom:2rem
-   }
-   .input,
-   form {
-    width:100%
-   }
-   input[type=text] {
-    background:transparent;
-    border:0;
-    color:#eee;
-    font-size:2.4rem;
-    outline:0;
-    padding:1rem 2rem;
-    text-align:center;
-    width:90%
-   }
-   input[type=text]:focus {
-    color:#fff
-   }
-   input[type=text]::placeholder {
-    color:hsla(0,0%,100%,.3)
-   }
-   input[type=checkbox] {
-    appearance:none;
-    display:none
-   }
-   #container {
-    max-width:90%
-   }
-   .item {
-    align-items:center;
-    color:hsla(0,0%,100%,.5);
-    font-size:1.6rem;
-    font-size:4rem;
-    height:100%;
-    justify-content:center;
-    line-height:2;
-    padding:1rem 0 0;
-    position:relative;
-    width:100%;
-    word-break:keep-all;
-    word-wrap:break-word
-   }
-   .item b {
-    color:#fff
-   }
-   .item span.line {
-    display:inline-block
-   }
-   
+body {
+  background: linear-gradient(-45deg, #fcfc53, #ffffff, #9532c7, #000000);
+  background-size: 300% 300%;
+  animation: gradient 15s ease infinite alternate;
+  height: 100%;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: left;
+  }
+
+  100% {
+    background-position: right;
+  }
+}
+
+#title {
+  text-align: center;
+  margin: 20px;
+  color: darkgray;
+}
+
+.chart-card {
+  height: auto;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#chart-container {
+  background-color: white;
+  height: auto;
+  width: 90vw;
+  flex: 1 1 1px;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+#settings-button {
+  position: absolute;
+  top: 20;
+  right: 20;
+}
+
+#url {
+  width: 80%;
+}
+
+#isf,
+#weight,
+#days,
+#end,
+#start {
+  width: 25%;
+}
