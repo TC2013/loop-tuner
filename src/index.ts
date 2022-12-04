@@ -37,7 +37,7 @@ async function actionPerformed(options: ResponseSettings) {
     options.dateEnd
   )
 
-  const avgBgArray = calculations.averageBGs(bgArray)
+  // const avgBgArray = calculations.averageBGs(bgArray)
 
   // calculations.getNetBasals(tempBasals, basalProfiles)
   charts.renderChart(bgArray)

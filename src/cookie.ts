@@ -8,12 +8,23 @@ addEventListener()
 
 export function setCookie() {
   let settings = {}
+  if(document.cookie == "") {
+  settings.name = "loop-tuner-settings"
+  settings.expires = "20 Jan 2040 12:00:00 UTC"
+  let cookieValue = JSON.stringify(settings)
+  document.cookie = cookieValue
+  settings = {}
+  cookieValue = ""
+  }
+
+  settings.name = "loop-tuner-settings"
   settings.url = document.querySelector('#url').value
   settings.days = document.querySelector('#days').value
   settings.isf = document.querySelector('#isf').value
   settings.weight = document.querySelector('#weight').value
+  settings.expires = "20 Jan 2040 12:00:00 UTC"
 
-  let cookieValue = JSON.stringify(settings)
+  cookieValue = JSON.stringify(settings)
   document.cookie = cookieValue
 }
 

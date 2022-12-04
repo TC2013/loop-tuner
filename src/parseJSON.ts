@@ -4,7 +4,9 @@ let profile: any = undefined
 
 export async function setProfile(options: ResponseSettings) {
   if (!profile) {
-    if (options.url[options.url.length] !== '/') options.url += '/'
+    // console.log("Options1: ",options.url)
+    // if (options.url[options.url.length] !== '/') options.url += '/'
+    // console.log("Options2: ",options.url)
     const response = await fetch(
       options.url + 'api/v1/profile.json?count=10000000'
     )
