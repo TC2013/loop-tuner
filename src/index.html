@@ -4,18 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
-    <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- This JavaScript Bundle with Popper should be added using the installed library instead-->
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
+    <link href="./libraries/bootstrap.min.css" rel="stylesheet">
     <title>Nightscout Tuner</title>
 </head>
 
 <body>
-    <div id="left">
+    <div id="top">
         <h1 id="title">Loop Tuner</h1>
-
+        <button id="go-button" class="btn btn-primary btn-lg col-3 mx-auto">
+            Go
+        </button>
 
         <div class="chart-card">
             <div id="chart-container"><canvas id="bgChart"></canvas>
@@ -50,66 +48,31 @@
                         <input type="text" id="url" value="https://canning.herokuapp.com/"><br><br>
 
                         <label for="days" class="form">Number of days to be included in calculations:</label><br>
-                        <input type="text" class="form" id="days" value="" onchange="setDateRange()"><br><br>
+                        <input type="text" class="form" id="days"><br><br>
 
                         <label for="start" class="form">Start:</label> <br>
-                        <input type="date" class="form" id="start" name="start" value="2022-11-23"><br><br>
+                        <input type="date" class="form" id="start" name="start"><br><br>
 
                         <label for="end" class="form">End:</label><br>
-                        <input type="date" class="form" id="end" name="end" value="2022-11-24"> <br><br>
+                        <input type="date" class="form" id="end" name="end"> <br><br>
 
                         <label for="isf" class="form">Insulin Sensitivity Factor:</label><br>
-                        <input type="text" class="form" id="isf" value="27"><br><br>
+                        <input type="text" class="form" id="isf"><br><br>
 
                         <label for="weight" class="form">Weight in Kg:</label><br>
-                        <input type="text" class="form" id="weight" value="80"><br><br>
+                        <input type="text" class="form" id="weight"><br><br>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-dark" data-bs-dismiss="modal"
-                        onClick="setCookie()">Save</button>
+                    <button type="button" id="save-button" class="btn btn-dark" data-bs-dismiss="modal">
+                        Save
+                    </button>
 
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 
-                    <script>
+                    <!-- <script>
                         document.getElementById("days").addEventListener("keyup", setDateRange);
-
-                        function setCookie() {
-                            let settings = {}
-                            settings.url = document.querySelector('#url').value
-                            settings.days = document.querySelector('#days').value
-                            settings.isf = document.querySelector('#isf').value
-                            settings.weight = document.querySelector('#weight').value
-
-                            let cookieValue = JSON.stringify(settings)
-                            document.cookie = cookieValue
-                        }
-                        function getCookie() {
-                            if (document.cookie.length != 0) {
-                                var settings = JSON.parse(document.cookie);
-                                document.querySelector('#url').value = settings.url
-                                document.querySelector('#days').value = settings.days
-                                document.querySelector('#isf').value = settings.isf
-                                document.querySelector('#weight').value = settings.weight
-                            }
-
-
-                        } getCookie()
-
-                        function setDateRange() {
-                            let days = document.querySelector('#days').value
-                            let dateStart = new Date()
-                            let dateEnd = new Date()
-                            let dateOffset = (24 * 60 * 60 * 1000) * days
-
-                            dateStart.setTime(dateStart.getTime() - dateOffset)
-                            dateEnd.setTime(dateEnd.getTime() - (24 * 60 * 60 * 1000))
-
-                            document.querySelector('#start').value = dateStart.toISOString().split('T')[0]
-                            document.querySelector('#end').value = dateEnd.toISOString().split('T')[0]
-                        } setDateRange()
-
-                    </script>
+                    </script> -->
                 </div>
             </div>
         </div>
@@ -120,7 +83,8 @@
     <script type="module" src="./parseJSON.ts"></script>
     <script type="module" src="./charts.ts"></script>
     <script type="module" src="./index.ts"></script>
-    <!-- <script type="module" src="./cookie.ts"></script> -->
+    <script src="./libraries/bootstrap.bundle.min.js"></script>
+    <script type="module" src="./cookie.ts"></script>
 </body>
 
 </html>

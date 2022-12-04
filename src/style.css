@@ -59,3 +59,11 @@ body {
 #start {
   width: 25%;
 }
+
+#go-button {
+  margin-bottom: 22px;
+}
+
+#top {
+  text-align: center;
+}
