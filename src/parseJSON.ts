@@ -7,10 +7,10 @@ export async function setProfile(options: ResponseSettings) {
     const response = await fetch(
       options.url + 'api/v1/profile.json?count=10000000'
     )
+    console.log("Profile: ",options.url, 'api/v1/profile.json?count=10000000'  )
     profile = (await response.json()).reverse()
   }
 }
-
 export async function getBG(
   url: String,
   dateStart: Date,
@@ -19,16 +19,16 @@ export async function getBG(
   const bgUrl = url.concat(
     'api/v1/entries/sgv.json?find[dateString][$gte]=',
     dateStart.toISOString(),
+    // new Date(dateStart+"T00:00").toISOString(),
     '&find[dateString][$lte]=',
     dateEnd.toISOString(),
+    // new Date(dateEnd+"T00:00").toISOString(),
     '&count=1000000'
   )
 
   console.log('Grabbing BGs JSON from Nightscout...', [{ bgUrl }])
-
   const response = await fetch(bgUrl)
   const bgJSON = await response.json()
-
   console.log('Success(' + getSize(bgJSON) + ' KB)')
 
   let bgArray: Array<BG> = []
@@ -58,7 +58,6 @@ export function getBasalProfile(
   dateEnd: Date
 ): Array<BasalProfile> {
   const basalProfiles: Array<any> = []
-
   let start = false
   for (let i = 0; i < profile.length; i++) {
     let obj = profile[i]
@@ -81,7 +80,6 @@ export function getBasalProfile(
       basalProfiles.push(basalProfile)
     }
   }
-
   return basalProfiles
 }
 
@@ -93,11 +91,13 @@ export async function getTempBasal(
   const tempBasalUrl = url.concat(
     'api/v1/treatments.json?find[created_at][$gte]=',
     dateStart.toISOString(),
+    // new Date(dateStart+"T00:00").toISOString(),
     '&find[created_at][$lte]=',
+    // new Date(dateEnd+"T00:00").toISOString(),
     dateEnd.toISOString(),
-    '&find[eventType]=Temp+Basal'
+    '&find[eventType]=Temp+Basal',
+    '&count=1000000'
   )
-
   console.log('Grabbing Temp Basals from Nightscout...', [{ tempBasalUrl }])
   const response = await fetch(tempBasalUrl)
   const tempBasalJSON = await response.json()
@@ -122,7 +122,6 @@ export async function getTempBasal(
         tempBasals[i - 1].duration * 60 * 1000
     )
     const currentStart: Date = tempBasals[i].created_at
-
     if (previousEnd > currentStart) {
       const diff: number =
         (currentStart.getTime() - tempBasals[i - 1].created_at.getTime()) /
@@ -134,6 +133,54 @@ export async function getTempBasal(
   return tempBasals
 }
 
+//This runs perfectly to get boluses and return the total bolus amount for each day.
+export async function getDailyBolusTotals(
+  url: String,
+  dateStart: Date,
+  dateEnd: Date
+): Promise<Array<TempBasal>> {
+  const bolusUrl = url.concat(
+    'api/v1/treatments.json?find[created_at][$gte]=',
+    dateStart.toISOString(),
+    // new Date(dateStart+"T00:00").toISOString(),
+    '&find[created_at][$lte]=',
+    // new Date(dateEnd+"T00:00").toISOString(),
+    dateEnd.toISOString(),
+    '&find[eventType]=Correction+Bolus'
+  )
+  console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
+  const response = await fetch(bolusUrl)
+  const bolusJSON = await response.json()
+
+  console.log('Success(' + getSize(bolusJSON) + ' KB)')
+
+  let boluses: Array<Boluses> = []
+  bolusJSON.map((i: any) => {
+    boluses.push({
+      bolus: i.insulin,
+      created_at: new Date(i.created_at),
+    })
+  })  
+  
+  let bolusTotals = boluses.reduce(function (acc, curr) {
+    let date = new Date(curr.created_at);
+    let dateString = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getFullYear();
+    let existing = acc.find(function (item) {
+      return item.date === dateString;
+    });
+    if (existing) {
+      existing.amount += curr.bolus;
+    } else {
+      acc.push({
+        date: dateString,
+        amount: curr.bolus
+      });
+    }
+    return acc;
+  }, []);
+  // console.log("Boluses: ", bolusTotals)
+  return bolusTotals;
+}
 //TODO: Possibly get the ISF from loop instead of having the user input it
 // function getIsfProfile(dateStart: Date, dateEnd: Date){
 //     const isfProfiles: Array<any> = []
@@ -171,6 +218,8 @@ export async function getTempBasal(
 //     return isfProfiles
 // }
 
+
 function getSize(obj: JSON): number {
-  return new TextEncoder().encode(JSON.stringify(obj)).length / 1024
+  return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
 }
+
