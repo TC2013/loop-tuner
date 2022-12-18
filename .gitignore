@@ -3,3 +3,4 @@ dist
 node_modules
 *lock*
 .DS_Store
+src/test.js

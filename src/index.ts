@@ -4,7 +4,7 @@ import * as calculations from './calculations'
 
 export const options: ResponseSettings = {
   url: 'https://canning.herokuapp.com/',
-  dateStart: new Date('2022-12-16T00:00'),
+  dateStart: new Date('2022-12-01T00:00'),
   dateEnd: new Date('2022-12-17T00:00'),
   showBasalChart: false,
   showBGChart: true,
@@ -57,10 +57,13 @@ async function actionPerformed(options: ResponseSettings) {
   )
   console.log("netBolusDailyTotals" , netBolusDailyTotals)
 
+  //returns all 288 values
   const avgBgArray = calculations.averageBGs(bgArray)
     console.log("avgBgArray: ", avgBgArray)
 
-
+  //returns every fourth value to make mobile views better
+  const avgBgArrayMobileView = calculations.averageBGsMobileView(bgArray)
+    console.log("avgBgArrayMobileView: ", avgBgArrayMobileView)
 
   const dailyTotalInsulin = calculations.dailyTotalInsulin(netBolusDailyTotals, netBasalDailyTotals)
    console.log("dailyTotalInsulin", dailyTotalInsulin)
@@ -75,9 +78,12 @@ async function actionPerformed(options: ResponseSettings) {
   displayTable(isfRecommendations, 'isf-table')
   
    let basalDivId = 'bg-chart'
-    
-  charts.renderChart(bgArray, basalDivId)
-  // charts.renderChart(avgBgArray)
+  //This is for mobile views  
+  charts.renderChartMobileView(avgBgArrayMobileView, basalDivId)
+
+  //This is for desktop views
+  // charts.renderChart(avgBgArray, basalDivId)
+
 }actionPerformed(options)
 
 function displayTable(data, divID) {
