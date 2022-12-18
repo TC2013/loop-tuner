@@ -1,69 +1,181 @@
 body {
-  background: linear-gradient(-45deg, #fcfc53, #ffffff, #9532c7, #000000);
-  background-size: 300% 300%;
-  animation: gradient 15s ease infinite alternate;
-  height: 100%;
-  margin: 0;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: rgb(70, 70, 70);
 }
-
-@keyframes gradient {
-  0% {
-    background-position: left;
-  }
-
-  100% {
-    background-position: right;
-  }
-}
-
-#title {
+/* 
+BEGIN CSS FOR HEADER
+*/
+#header {
+  Width: auto;
   text-align: center;
-  margin: 20px;
-  color: darkgray;
+  font-size: 20px;
+  font-weight: bolder;
+  background-color: #000000;
+  color: white;
+  }
+
+  #title {
+    padding-top: 10px;
+    text-align: center;
+    padding-bottom: 10px;
+    background-color: rgb(70, 70, 70);
+    color: white;
+    font-size: 30px;
+  }
+/* 
+BEGIN CSS FOR MAIN
+*/
+#main {
+  /* Width: auto; */
+  text-align: center;
+  font-size:medium;
+  background-color: rgb(70, 70, 70);
 }
 
-.chart-card {
-  height: auto;
-  width: auto;
+/* 
+BEGIN CSS FOR BASAL CALCULATOR VIEW
+*/
+
+#bg-chart {
+  background-color: white;
+  border-radius: 15px;
+  height: fit-content;
+  transition: 1s;
+  min-height: 200px;
+  max-width: fit-content;
+
+}
+
+#basal-options {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0);
+  bottom: 150px;
   display: flex;
-  flex-direction: column;
+}
+
+#basal-go-button {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 50%;
+  height: 25px;
+  font-size: large;
+  background-color: gray;
+  border-radius: 5px;
+  margin-top: 25px;
+  bottom: 100px;
+}
+
+#start-basal-label, #end-basal-label {
+  color: white;
+}
+
+#start-basal-date, #end-basal-date {
+  background-color: #858585;
+  color: white;
+}
+
+/* 
+BEGIN CSS FOR ICR VIEW
+*/
+#icr-table {
+  color: white;
+
+}
+
+a {
+  color: rgb(249, 139, 35);
+}
+
+a:visited {
+  color: rgb(249, 139, 35);
+}
+
+/* 
+BEGIN CSS FOR ISF VIEW
+*/
+#isf-table {
+  color: white;
+
+}
+/* 
+BEGIN CSS FOR SETTINGS
+*/
+#url-label {
+  padding-top: 0px;
+}
+#url {
+  width:80%;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+#url, #days, #isf, #icr, #weight, #target-bg {
+  font-size: medium;
+  color: white;
+  background-color: #858585;
+}
+
+ #url-label, #days-label, #isf-label, #icr-label, #weight-label, #target-bg-label {
+  font-size: medium;
+  color: white;
+}
+
+#url-label, #days-label, #isf-label, #icr-label, #weight-label {
+  font-size: medium;
+  margin-bottom: 10px;
+}
+
+#days, #isf, #icr, #weight, #target-bg {
+  width: 125px;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+#save-button {
+  width: 50%;
+  max-width: 400px;
+  height: 30px;
+  font-size: large;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+/* 
+BEGIN CSS FOR FOOTER
+*/
+#footer {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background-color: #fff;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+  background-color: rgb(33, 33, 33);
+}
+
+.menu-button {
+  background: transparent;
+  border: none;
+  color: white;
+}
+
+.icon {
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 50px;
+  height: 50px;
 }
 
-#chart-container {
-  background-color: white;
-  height: auto;
-  width: 90vw;
-  flex: 1 1 1px;
-  border-radius: 8px;
-  padding: 20px;
+#copyright {
+  text-align: left;
+  color: black;
 }
 
-#settings-button {
-  position: absolute;
-  top: 20;
-  right: 20;
-}
-
-#url {
-  width: 80%;
-}
-
-#isf,
-#weight,
-#days,
-#end,
-#start {
-  width: 25%;
-}
-
-#go-button {
-  margin-bottom: 22px;
-}
-
-#top {
-  text-align: center;
+#pride {
+  background: linear-gradient(to right, #FFFF00, #FFFFFF, #8F00FF, #000000);
 }
