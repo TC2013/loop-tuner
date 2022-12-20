@@ -85,13 +85,14 @@ export function averageBGsMobileView(bgsArray: Array<Array<BG>>): Array<BG>{
   return averageBGs
 }
 
+//This returns the net basal amount for each day.
 export function getNetBasals(tempBasals: Array<TempBasal>, basalProfiles: Array<BasalProfile>, options: ResponseSettings){
     let netBasals = []
 
     for(let i = 0; i < tempBasals.length-1; i++){
         netBasals.push(tempBasals[i])
         let tbStart = new Date(tempBasals[i].created_at)
-        let tbEnd = new Date(new Date(tbStart).setMinutes(tbStart.getMinutes() + tempBasals[i].duration))
+        let tbEnd = new Date(new Date(tbStart).setTime(tbStart.getTime() + tempBasals[i].duration * (1000 * 60)))
         let nextTbStart = new Date(tempBasals[i+1].created_at)
         if(tbEnd < nextTbStart){
             pushBasalProfiles(basalProfiles, tbEnd, netBasals, nextTbStart)
@@ -154,7 +155,6 @@ function netBasalAmount(netBasals) {
   return netBasalAmount;
 }
 
-
 //This provides the total basal insulin given each day with the format { date: '2022-10-10', amount: 10.4333333 }.
 export function sumAmountPerDay(netBasals) {
   // First, we need to iterate over the array of objects and calculate the amount for each object
@@ -189,6 +189,96 @@ export function sumAmountPerDay(netBasals) {
 
   return result;
 }
+
+export async function dailyBolusTotals(bolusJSON: Promise<Array<any>>) {
+  // Wait for the bolusJSON promise to resolve
+  const bolusData = await bolusJSON;
+
+  let boluses: Array<Boluses> = []
+  bolusData.map((i: any) => {
+    boluses.push({
+      bolus: i.insulin,
+      created_at: new Date(i.created_at),
+    })
+  })  
+
+  let bolusTotals = boluses.reduce(function (acc, curr) {
+    let date = new Date(curr.created_at);
+    let dateString = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getFullYear();
+    let existing = acc.find(function (item) {
+      return item.date === dateString;
+    });
+    if (existing) {
+      existing.amount += curr.bolus;
+    } else {
+      acc.push({
+        date: dateString,
+        amount: curr.bolus
+      });
+    }
+    return acc;
+  }, []);
+  // console.log("Boluses: ", bolusTotals)
+  return bolusTotals;
+}
+
+// export async function getDIA(correctionBoluses, url, dateStart, dateEnd, weight, poolingTime) {
+//   const basalAverage = await averageBasals(url, dateStart, dateEnd, 5, false);
+//   console.log('basalAverage',basalAverage)
+//   const insulinDeliveredArr = new Array(576);
+//   console.log('correctionBoluses',correctionBoluses)
+//   const correctionBolusesFilled = await correctionBoluses
+//   console.log('correctionBolusesFilled',correctionBolusesFilled)
+
+  // for (let i = 0; i < basalAverage.length; i++) {
+  //   const hour = Math.floor(i * 5 / 60);
+  //   const minute = i * 5 - (60 * hour);
+  //   insulinDeliveredArr[i + 144] = new CorrectionBolus(basalAverage[i] / 12, { hour, minute });
+  // }
+
+  // insulinDeliveredArr.splice(0, 0, ...insulinDeliveredArr.slice(288, 432));
+  // insulinDeliveredArr.splice(432, 0, ...insulinDeliveredArr.slice(144, 288));
+
+  // for (const correctionBolus of correctionBolusesFilled) {
+  //   // const pos = (correctionBolus.getTimestamp().hour * 60 + correctionBolus.getTimestamp().minute) / 5;
+  //   const pos = (correctionBolus.getTimestamp().getHours() * 60 + correctionBolus.getTimestamp().getMinutes()) / 5;
+  //   insulinDeliveredArr[pos + 144].insulin += correctionBolus.insulin;
+  // }
+
+  // const DIA = new Array(576);
+  // for (let i = 144; i < 432; i++) {
+  //   let insulin = 0;
+  //   for (let j = i - poolingTime / 5; j < i; j++) {
+  //     insulin += insulinDeliveredArr[j].insulin;
+  //   }
+  //   DIA[i] += GIRCurve(insulin / weight, false).length * 15.0 / 60.0 / 5.0;
+  // }
+
+  // DIA.splice(0, 0, ...DIA.slice(288, 432));
+  // DIA.splice(432, 0, ...DIA.slice(144, 288));
+  // return DIA;
+// }
+
+// Calculates the average basal over every period specified. The period is in minutes. So using a period of 30 would return an array consisting of the average basal every 30 minutes.
+export function averageNetBasals(netBasals: TempBasal[]){
+  let averageNetBasals = new Array(48).fill(0)
+  netBasals.map((obj) =>{
+      let tbStart = obj.created_at
+      let tbEnd = new Date(tbStart.getTime() + obj.duration * 1000 * 60)
+      let i = tbStart.getHours() * 2 + Math.floor(tbStart.getMinutes()/30)
+      
+      for(let j = tbEnd.getHours() * 2 + Math.floor(tbEnd.getMinutes()/30);j > i; j--){
+          let duration = (j%2 == 0) ? tbEnd.getMinutes() : tbEnd.getMinutes() - 30
+          averageNetBasals[j] += duration * (obj.rate/60)
+          tbEnd.setMinutes(tbEnd.getMinutes() - duration)
+      }
+      
+      let duration = (tbEnd.getTime() - tbStart.getTime()) / (1000 * 60)
+      averageNetBasals[i] += duration * (obj.rate/60)
+  })
+  return averageNetBasals
+}
+
 //TODO: This function is currently all done and working in parseJSON. Break it up and put calculations here.
 // export function netBolusDailyTotals() {
 //   bolusJSON = await _parseJSON.getBoluses(
@@ -237,7 +327,7 @@ export function dailyTotalInsulin(netBolusDailyTotals, netBasalDailyTotals) {
   return combinedInsulinDailyTotal;
 }
 
-//This function average the "amount" values in an array
+//This function averages the "amount" values in an array
 function averageAmount(array) {
   let sum = 0;
   for (let i = 0; i < array.length; i++) {
@@ -246,8 +336,7 @@ function averageAmount(array) {
   return sum / array.length;
 }
 
-//This is the ISF Calculator 
-//Based on https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5478012
+//This is the ISF Calculator Based on https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5478012
 export function isfCalculator(dailyTotalInsulin, netBasalDailyTotals) {
   let totalInsulin = 0;
   let totalNetBasal = 0;
@@ -279,8 +368,7 @@ export function isfCalculator(dailyTotalInsulin, netBasalDailyTotals) {
   };
 }
 
-//This is the Fine Tuning ISF calculator
-
+//This is the place holder for Fine Tuning ISF calculator
 
 //This is the ICR Calculator
 //Based on https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5478012
@@ -300,7 +388,6 @@ export function icrCalculator(weight, netBasalDailyTotals, dailyTotalInsulin) {
    }
    const avgBasalInsulin = totalBasalInsulin / netBasalDailyTotals.length;
    console.log("avgBasalInsulin",avgBasalInsulin)
-   console.log(weight)
   let morning = (6.2 * weight) / avgTotalInsulin; 
   let night = (6.2 * weight) / avgBasalInsulin;
   let midDay = (morning + night) / 2;
@@ -319,5 +406,43 @@ export function icrCalculator(weight, netBasalDailyTotals, dailyTotalInsulin) {
   };
 
   return icrRecommendations;
+}
+
+/////////////Begin Glucose Infusion Rate (GIR) Calculations////////////////
+
+function getSmallYData(smallXData) {
+  //using the .1 U/kg curve
+  let smallYData = new Array(1920);
+  for (let i = 0; i < smallYData.length; i++) {
+    let x = smallXData[i];
+    let y = 0.0033820425120803 * Math.pow(x, 5) - 0.0962642502970792 * Math.pow(x, 4) + 1.0161233494860400 * Math.pow(x, 3) -
+      4.7280409167367000 * Math.pow(x, 2) + 8.2811624637053000 * x - 0.4658832073238300;
+    smallYData[i] = y;
+  }
+  return smallYData;
+}
+
+function getMediumYData(mediumXData) {
+  //Using the .2 U/kg curve
+  let mediumYData = new Array(1920);
+  for (let i = 0; i < mediumXData.length; i++) {
+    let x = mediumXData[i];
+    let y = 0.0004449113905105 * Math.pow(x, 6) - 0.0097881251143144 * Math.pow(x, 5) + 0.0487062677027909 * Math.pow(x, 4) +
+      0.3395509285035820 * Math.pow(x, 3) - 3.8635372657493500 * Math.pow(x, 2) + 9.8215306047782600 * x - 0.5016675029655920;
+    mediumYData[i] = y;
+  }
+  return mediumYData;
+}
+
+function getLargeYData(largeXData) {
+  //Using the .4 U/kg curve
+  let largeYData = new Array(1920);
+  for (let i = 0; i < largeXData.length; i++) {
+    let x = largeXData[i];
+    let y = -0.0224550824431891 * Math.pow(x, 4) + 0.5324819868175370 * Math.pow(x, 3) - 4.2740977490209200 * Math.pow(x, 2) +
+      11.6354217632198000 * x - 0.0653457810255797;
+    largeYData[i] = y;
+  }
+  return largeYData;
 }
 
