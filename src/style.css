@@ -78,6 +78,11 @@ BEGIN CSS FOR BASAL CALCULATOR VIEW
 /* 
 BEGIN CSS FOR ICR VIEW
 */
+#icr-button {
+  font-size: xx-large;
+
+}
+
 #icr-table {
   color: white;
 
