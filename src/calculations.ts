@@ -118,9 +118,9 @@ import _ from "underscore"
   //This returns the basal profile daily totals if temp basals were not used. It lookes at the basal profiles and returns the total daily delivery.
   export function getBasalProfileTotals(basalProfiles: Array<BasalProfile>){
     let basalProfilesTotal = basalProfiles.reduce((acc, obj) => {
-      let profile = obj.profile.concat({
-        value: obj.profile[0].value,
-        time: obj.profile[0].time,
+      let profile = obj.basal.concat({
+        value: obj.basal[0].value,
+        time: obj.basal[0].time,
         timeAsSeconds: 60 * 60 * 24
       });
       let total = 0;
@@ -136,12 +136,12 @@ import _ from "underscore"
     return basalProfilesTotal;
   }
 
-  //This is tied to the function above. getNetBasals returns the actual basal rates through the time periods 
+  //This is tied to the getNetBasals function. getNetBasals returns the actual basal rates through the time periods 
   function pushBasalProfiles(basalProfiles: Array<BasalProfile>, tbEnd: Date, netBasals: Array<TempBasal>, nextTbStart: Date){
       let profile: Array<Basal> = []
       basalProfiles.map((obj) =>{
           if(tbEnd >= obj.startDate && tbEnd <= obj.endDate){
-              profile = obj.profile.map((x) => x)
+              profile = obj.basal.map((x) => x)
               profile.push({
                       value: profile![0].value,
                       time: profile![0].time,

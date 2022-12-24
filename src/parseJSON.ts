@@ -2,7 +2,7 @@ import _, { map } from 'underscore'
 
 let profile: any = undefined
 
-export async function setProfile(options: ResponseSettings) {
+export async function getAllProfiles(options: ResponseSettings) {
   if (!profile) {
     const response = await fetch(
       options.url + 'api/v1/profile.json?count=10000000'
@@ -13,7 +13,7 @@ export async function setProfile(options: ResponseSettings) {
 }
 
 //This returns only the profiles for the period selected
-export function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> {
+export function setProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> {
   const basalProfiles: Array<any> = []
   let start = false
   for (let i = 0; i < profile.length; i++) {
@@ -23,7 +23,7 @@ export function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProf
       i + 1 < profile.length ? profile[i + 1].startDate : new Date()
     )
     let basalProfile = {
-      profile: obj.store.Default.basal,
+      basal: obj.store.Default.basal,
       startDate: startDate,
       endDate: endDate,
       isf: obj.store.Default.sens,

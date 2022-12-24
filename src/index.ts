@@ -26,8 +26,8 @@ async function actionPerformed(options: ResponseSettings) {
 
 //GET BG, PROFILE, TEMP BASAL, AND BOLUS DATA
 
-  await parseJSON.setProfile(options)
-  const profile = parseJSON.getBasalProfile(options.dateStart, options.dateEnd)
+  await parseJSON.getAllProfiles(options)
+  const profile = parseJSON.setProfile(options.dateStart, options.dateEnd)
   console.log("profile", profile)
 
   const bgArray = await parseJSON.getBG(options.url, options.dateStart, options.dateEnd)
