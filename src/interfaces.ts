@@ -8,6 +8,11 @@ interface Basal{
 interface BasalProfile{
     readonly profile: Array<Basal>
     readonly startDate: Date
+    readonly endDate: Date
+    isf: number,
+    carbRatio: number,
+    lowTarget: number,
+    highTarget: number,
 }
 
 interface BG{

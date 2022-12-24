@@ -11,11 +11,41 @@ export async function setProfile(options: ResponseSettings) {
     profile = (await response.json()).reverse()
   }
 }
-export async function getBG(
-  url: String,
-  dateStart: Date,
-  dateEnd: Date
-): Promise<Array<Array<BG>>> {
+
+//This returns only the profiles for the period selected
+export function getBasalProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> {
+  const basalProfiles: Array<any> = []
+  let start = false
+  for (let i = 0; i < profile.length; i++) {
+    let obj = profile[i]
+    let startDate = new Date(obj.startDate)
+    let endDate = new Date(
+      i + 1 < profile.length ? profile[i + 1].startDate : new Date()
+    )
+    let basalProfile = {
+      profile: obj.store.Default.basal,
+      startDate: startDate,
+      endDate: endDate,
+      isf: obj.store.Default.sens,
+      carbRatio: obj.store.Default.carbratio,
+      lowTarget: obj.store.Default.target_low,
+      highTarget: obj.store.Default.target_high
+    }
+    if (dateStart > startDate && dateStart < endDate) {
+      basalProfiles.push(basalProfile)
+      start = true
+    } else if (dateEnd > startDate && dateEnd < endDate) {
+      basalProfiles.push(basalProfile)
+      break
+    } else if (start) {
+      basalProfiles.push(basalProfile)
+    }
+  }
+  return basalProfiles
+
+}
+
+export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<Array<BG>>> {
   const bgUrl = url.concat(
     'api/v1/entries/sgv.json?find[dateString][$gte]=',
     dateStart.toISOString(),
@@ -51,41 +81,7 @@ export async function getBG(
   return bgsArray.reverse()
 }
 
-export function getBasalProfile(
-  dateStart: Date,
-  dateEnd: Date
-): Array<BasalProfile> {
-  const basalProfiles: Array<any> = []
-  let start = false
-  for (let i = 0; i < profile.length; i++) {
-    let obj = profile[i]
-    let startDate = new Date(obj.startDate)
-    let endDate = new Date(
-      i + 1 < profile.length ? profile[i + 1].startDate : new Date()
-    )
-    let basalProfile = {
-      profile: obj.store.Default.basal,
-      startDate: startDate,
-      endDate: endDate,
-    }
-    if (dateStart > startDate && dateStart < endDate) {
-      basalProfiles.push(basalProfile)
-      start = true
-    } else if (dateEnd > startDate && dateEnd < endDate) {
-      basalProfiles.push(basalProfile)
-      break
-    } else if (start) {
-      basalProfiles.push(basalProfile)
-    }
-  }
-  return basalProfiles
-}
-
-export async function getTempBasal(
-  url: String,
-  dateStart: Date,
-  dateEnd: Date
-): Promise<Array<TempBasal>> {
+export async function getTempBasal(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
   const tempBasalUrl = url.concat(
     'api/v1/treatments.json?find[created_at][$gte]=',
     dateStart.toISOString(),
@@ -129,12 +125,7 @@ export async function getTempBasal(
   return tempBasals
 }
 
-//This gets the correction bolus data (all boluses are correction boluses in NS)
-export async function getCorrectionBoluses(
-  url: String,
-  dateStart: Date,
-  dateEnd: Date
-): Promise<Array<TempBasal>> {
+export async function getAllBoluses(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
   const bolusUrl = url.concat(
     'api/v1/treatments.json?find[$or][0][created_at][$gte]=',
     dateStart.toISOString(),
@@ -144,9 +135,9 @@ export async function getCorrectionBoluses(
     '&find[$or][1][created_at][$gte]=',
     dateStart.toISOString(),
     '&find[$or][1][created_at][$lte]=',
+    dateEnd.toISOString(),
     '&find[$or][1][eventType]=Correction+Bolus'
   )
-
   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
   const response = await fetch(bolusUrl)
   const bolusJSON = await response.json()
@@ -154,6 +145,34 @@ export async function getCorrectionBoluses(
   console.log('Success(' + getSize(bolusJSON) + ' KB)')
   return bolusJSON;
 }
+
+function getSize(obj: JSON): number {
+  return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
+}
+
+//Maybe useful to save
+
+// //This gets the correction bolus data (all boluses are correction boluses in NS)
+// export async function getCarbCorrections(
+//   url: String,
+//   dateStart: Date,
+//   dateEnd: Date
+// ): Promise<Array<TempBasal>> {
+//   const bolusUrl = url.concat(
+//     'api/v1/treatments.json?find[created_at][$gte]=',
+//     dateStart.toISOString(),
+//     '&find[created_at][$lte]=',
+//     dateEnd.toISOString(),
+//     '&find[eventType]=Carb+Correction',
+//   )
+
+//   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
+//   const response = await fetch(bolusUrl)
+//   const bolusJSON = await response.json()
+
+//   console.log('Success(' + getSize(bolusJSON) + ' KB)')
+//   return bolusJSON;
+// }
 
 //TODO: Possibly get the ISF from loop instead of having the user input it
 // function getIsfProfile(dateStart: Date, dateEnd: Date){
@@ -191,9 +210,3 @@ export async function getCorrectionBoluses(
 
 //     return isfProfiles
 // }
-
-
-function getSize(obj: JSON): number {
-  return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
-}
-
