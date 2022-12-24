@@ -98,6 +98,70 @@ import _ from "underscore"
     return tempBasalTotal;
   }
 
+  //This returns the just the totals for when the profile basal rate is active.
+  export function getProfileBasalTotal(tempBasals: Array<TempBasal>, basalProfiles: Array<BasalProfile>, options: ResponseSettings){
+    let profileBasals = []
+
+    for(let i = 0; i < tempBasals.length-1; i++){
+        // netBasals.push(tempBasals[i])
+        let tbStart = new Date(tempBasals[i].created_at)
+        let tbEnd = new Date(new Date(tbStart).setTime(tbStart.getTime() + tempBasals[i].duration * (1000 * 60)))
+        let nextTbStart = new Date(tempBasals[i+1].created_at)
+        if(tbEnd < nextTbStart){
+            pushDefaultProfiles(basalProfiles, tbEnd, profileBasals, nextTbStart)
+        } 
+
+    }
+
+    return profileBasals
+}
+
+  //This is tied to the getProfileBasalTotal function. getProfileBasalTotal returns the values for only when the default profile was active.
+  function pushDefaultProfiles(basalProfiles: Array<BasalProfile>, tbEnd: Date, profileBasals: Array<TempBasal>, nextTbStart: Date){
+    let profile: Array<Basal> = []
+    basalProfiles.map((obj) =>{
+        if(tbEnd >= obj.startDate && tbEnd <= obj.endDate){
+            profile = obj.basal.map((x) => x)
+            profile.push({
+                    value: profile![0].value,
+                    time: profile![0].time,
+                    timeAsSeconds: 60 * 60 * 24
+                })
+        }
+    })
+
+    for(let i = 0; i < profile.length -1; i++){
+        let bStart = new Date(new Date(tbEnd).setHours(0,0,profile[i].timeAsSeconds,0))
+        let bEnd = new Date(new Date(tbEnd).setHours(0,0,profile[i+1].timeAsSeconds,0))
+        
+        if (tbEnd >= bStart && tbEnd <= bEnd){
+            let newBEnd = (bEnd < nextTbStart) ? new Date(bEnd) : new Date(nextTbStart)
+            let created_at = tbEnd
+            let duration = (newBEnd.getTime() - created_at.getTime()) / (1000 * 60)
+            let rate = profile[i].value
+
+            profileBasals.push({
+                    rate: rate,
+                    duration: duration,
+                    created_at: created_at
+            })
+
+            tbEnd = new Date(tbEnd.getTime() + duration * 1000 * 60)
+
+        }
+
+    }
+    
+  }
+
+  //This function sums the total amount of insulin delivered through the profile basal rates.
+  export function sumProfileBasalDelivery(netProfileBasals) {
+    let profileBasalTotal = netProfileBasals.reduce((acc, obj) => {
+      return acc + obj.rate * obj.duration / 60;
+    }, 0);
+    return profileBasalTotal;
+  }
+
   //This returns the net basal amount for each day. It includes both the temp basals and the regular basal rates.
   export function getNetBasals(tempBasals: Array<TempBasal>, basalProfiles: Array<BasalProfile>, options: ResponseSettings){
     let netBasals = []
@@ -115,6 +179,45 @@ import _ from "underscore"
 
     return netBasals
 }
+
+  //This is tied to the getNetBasals function. getNetBasals returns the actual basal rates through the time periods 
+  function pushBasalProfiles(basalProfiles: Array<BasalProfile>, tbEnd: Date, netBasals: Array<TempBasal>, nextTbStart: Date){
+    let profile: Array<Basal> = []
+    basalProfiles.map((obj) =>{
+        if(tbEnd >= obj.startDate && tbEnd <= obj.endDate){
+            profile = obj.basal.map((x) => x)
+            profile.push({
+                    value: profile![0].value,
+                    time: profile![0].time,
+                    timeAsSeconds: 60 * 60 * 24
+                })
+        }
+    })
+
+    for(let i = 0; i < profile.length -1; i++){
+        let bStart = new Date(new Date(tbEnd).setHours(0,0,profile[i].timeAsSeconds,0))
+        let bEnd = new Date(new Date(tbEnd).setHours(0,0,profile[i+1].timeAsSeconds,0))
+        
+        if (tbEnd >= bStart && tbEnd <= bEnd){
+            let newBEnd = (bEnd < nextTbStart) ? new Date(bEnd) : new Date(nextTbStart)
+            let created_at = tbEnd
+            let duration = (newBEnd.getTime() - created_at.getTime()) / (1000 * 60)
+            let rate = profile[i].value
+
+            netBasals.push({
+                    rate: rate,
+                    duration: duration,
+                    created_at: created_at
+            })
+
+            tbEnd = new Date(tbEnd.getTime() + duration * 1000 * 60)
+
+        }
+
+    }
+    
+  }
+
   //This returns the basal profile daily totals if temp basals were not used. It lookes at the basal profiles and returns the total daily delivery.
   export function getBasalProfileTotals(basalProfiles: Array<BasalProfile>){
     let basalProfilesTotal = basalProfiles.reduce((acc, obj) => {
@@ -134,44 +237,6 @@ import _ from "underscore"
       return acc + total;
     }, 0);
     return basalProfilesTotal;
-  }
-
-  //This is tied to the getNetBasals function. getNetBasals returns the actual basal rates through the time periods 
-  function pushBasalProfiles(basalProfiles: Array<BasalProfile>, tbEnd: Date, netBasals: Array<TempBasal>, nextTbStart: Date){
-      let profile: Array<Basal> = []
-      basalProfiles.map((obj) =>{
-          if(tbEnd >= obj.startDate && tbEnd <= obj.endDate){
-              profile = obj.basal.map((x) => x)
-              profile.push({
-                      value: profile![0].value,
-                      time: profile![0].time,
-                      timeAsSeconds: 60 * 60 * 24
-                  })
-          }
-      })
-
-      for(let i = 0; i < profile.length -1; i++){
-          let bStart = new Date(new Date(tbEnd).setHours(0,0,profile[i].timeAsSeconds,0))
-          let bEnd = new Date(new Date(tbEnd).setHours(0,0,profile[i+1].timeAsSeconds,0))
-          
-          if (tbEnd >= bStart && tbEnd <= bEnd){
-              let newBEnd = (bEnd < nextTbStart) ? new Date(bEnd) : new Date(nextTbStart)
-              let created_at = tbEnd
-              let duration = (newBEnd.getTime() - created_at.getTime()) / (1000 * 60)
-              let rate = profile[i].value
-
-              netBasals.push({
-                      rate: rate,
-                      duration: duration,
-                      created_at: created_at
-              })
-
-              tbEnd = new Date(tbEnd.getTime() + duration * 1000 * 60)
-
-          }
-
-      }
-      
   }
 
   //Get Total Daily Delivery for TempBasalInsulin

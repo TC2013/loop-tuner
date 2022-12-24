@@ -34,7 +34,7 @@ async function actionPerformed(options: ResponseSettings) {
   // console.log("bgArray:", bgArray)
 
   const tempBasals = await parseJSON.getTempBasal(options.url, options.dateStart, options.dateEnd)
-  // console.log("tempBasals",tempBasals)
+  console.log("tempBasals",tempBasals)
 
   const bolusJSON = await parseJSON.getAllBoluses(options.url, options.dateStart, options.dateEnd)
   // console.log('bolusJSON',bolusJSON)
@@ -54,6 +54,12 @@ async function actionPerformed(options: ResponseSettings) {
 //PROCESS TEMP BASAL DATA
   const totalTempBasalAmount = calculations.getTempBasalTotal(tempBasals)
   console.log("totalTempBasalAmount", totalTempBasalAmount)
+
+  const netProfileBasals = calculations.getProfileBasalTotal(tempBasals, profile)
+  console.log("netProfileBasals", netProfileBasals)
+
+  const sumProfileBasalDelivery = calculations.sumProfileBasalDelivery(netProfileBasals)
+  console.log("sumProfileBasalDelivery", sumProfileBasalDelivery)
 
   const netBasals = calculations.getNetBasals(tempBasals, profile)
   console.log("NetBasals", netBasals)
