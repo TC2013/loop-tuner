@@ -12,8 +12,9 @@ export async function getAllProfiles(options: ResponseSettings) {
   }
 }
 
-//This returns only the profiles for the period selected
-export function setProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> {
+//This returns default profile settings for the period selected
+export async function setProfile(options: ResponseSettings): Promise<BasalProfile[]> {
+  const profile = await getAllProfiles()
   const basalProfiles: Array<any> = []
   let start = false
   for (let i = 0; i < profile.length; i++) {
@@ -125,24 +126,57 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd: Date):
   return tempBasals
 }
 
+// export async function getCarbCorrections(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
+//   const carbCorrectionUrl = url.concat(
+//     'api/v1/treatments.json?find[created_at][$gte]=',
+//     dateStart.toISOString(),
+//     '&find[created_at][$lte]=',
+//     dateEnd.toISOString(),
+//     '&find[eventType]=Carb+Correction',
+//     '&count=1000000'
+//   )
+//   console.log('Grabbing Bolus Data from Nightscout...', [{ carbCorrectionUrl }],carbCorrectionUrl)
+//   const response1 = await fetch(carbCorrectionUrl)
+//   const carbCorrectionJSON = await response1.json()
+
+//   console.log('Success(' + getSize(carbCorrectionJSON) + ' KB)')
+//   return carbCorrectionJSON;
+// }
+
+function getSize(obj: JSON): number {
+  return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
+}
+
+
 export async function getAllBoluses(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
+  const carbCorrectionUrl = url.concat(
+    'api/v1/treatments.json?find[created_at][$gte]=',
+    dateStart.toISOString(),
+    '&find[created_at][$lte]=',
+    dateEnd.toISOString(),
+    '&find[eventType]=Carb+Correction',
+    '&count=1000000'
+  )
+  console.log('Grabbing Bolus Data from Nightscout...', [{ carbCorrectionUrl }],carbCorrectionUrl)
+  const response1 = await fetch(carbCorrectionUrl)
+  const carbCorrectionJSON = await response1.json()
+
+  console.log('Success(' + getSize(carbCorrectionJSON) + ' KB)')
   const bolusUrl = url.concat(
     'api/v1/treatments.json?find[$or][0][created_at][$gte]=',
     dateStart.toISOString(),
-    '&find[$or][0][created_at][$lte]=',
+    '&find[created_at][$lte]=',
     dateEnd.toISOString(),
-    '&find[$or][0][eventType]=Carb+Correction',
-    '&find[$or][1][created_at][$gte]=',
-    dateStart.toISOString(),
-    '&find[$or][1][created_at][$lte]=',
-    dateEnd.toISOString(),
-    '&find[$or][1][eventType]=Correction+Bolus'
+    '&find[eventType]=Correction+Bolus'
   )
   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
-  const response = await fetch(bolusUrl)
-  const bolusJSON = await response.json()
+  const response2 = await fetch(bolusUrl)
+  const bolusJSON = await response2.json()
 
   console.log('Success(' + getSize(bolusJSON) + ' KB)')
+  //prepend carbCorrectionJSON to bolusJSON
+  bolusJSON.unshift(...carbCorrectionJSON)
+
   return bolusJSON;
 }
 
@@ -151,6 +185,28 @@ function getSize(obj: JSON): number {
 }
 
 //Maybe useful to save
+
+// export async function getAllBoluses(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
+//   const bolusUrl = url.concat(
+//     'api/v1/treatments.json?find[$or][0][created_at][$gte]=',
+//     dateStart.toISOString(),
+//     '&find[$or][0][created_at][$lte]=',
+//     dateEnd.toISOString(),
+//     '&find[$or][0][eventType]=Carb+Correction',
+//     '&find[$or][1][created_at][$gte]=',
+//     dateStart.toISOString(),
+//     '&find[$or][1][created_at][$lte]=',
+//     dateEnd.toISOString(),
+//     '&find[$or][1][eventType]=Correction+Bolus'
+//   )
+//   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
+//   const response = await fetch(bolusUrl)
+//   const bolusJSON = await response.json()
+
+//   console.log('Success(' + getSize(bolusJSON) + ' KB)')
+//   return bolusJSON;
+// }
+
 
 // //This gets the correction bolus data (all boluses are correction boluses in NS)
 // export async function getCarbCorrections(

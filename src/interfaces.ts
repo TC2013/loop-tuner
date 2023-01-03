@@ -1,4 +1,3 @@
-
 //Data Types
 interface Basal{
     readonly value: number
@@ -52,7 +51,6 @@ interface TempBasal{
     readonly created_at: Date
 }
 
-
 //Not Data Types
 interface ResponseSettings{
     url: String
@@ -66,7 +64,8 @@ interface ResponseSettings{
     ISF: number
     weight: number
     minBG: number
+    targetBG: number
     poolingTime: number
-
+    period: number
 }
 
