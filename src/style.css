@@ -44,6 +44,16 @@ BEGIN CSS FOR BASAL CALCULATOR VIEW
   max-width: fit-content;
 
 }
+#myChart {
+  background-color: white;
+  border-radius: 15px;
+  height: fit-content;
+  transition: 1s;
+  min-height: 200px;
+  max-width: 100%;
+  max-height: 400px;
+
+}
 
 #basal-options {
   position: absolute;
@@ -64,6 +74,18 @@ BEGIN CSS FOR BASAL CALCULATOR VIEW
   border-radius: 5px;
   margin-top: 25px;
   bottom: 100px;
+}
+#basal-go-button2 {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 50%;
+  height: 25px;
+  font-size: large;
+  background-color: gray;
+  border-radius: 5px;
+  margin-top: 25px;
+  bottom: 70px;
 }
 
 #start-basal-label, #end-basal-label {
