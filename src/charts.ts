@@ -113,5 +113,3 @@ export function renderChart(bgArray, containerId) {
     },
   });
 }
-
-

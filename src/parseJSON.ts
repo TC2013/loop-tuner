@@ -3,17 +3,17 @@ import _, { map } from 'underscore'
 let profile: any = undefined
 
 export async function getAllProfiles(options: ResponseSettings) {
-  if (!profile) {
-    const response = await fetch(
-      options.url + 'api/v1/profile.json?count=10000000'
-    )
-    console.log("Profile: ",options.url, 'api/v1/profile.json?count=10000000'  )
-    profile = (await response.json()).reverse()
-  }
+  console.log('getAllProfiles started')
+  const response = await fetch(options.url + 'api/v1/profile.json?count=10000000')
+  console.log("Profile: ",options.url, 'api/v1/profile.json?count=10000000'  )
+  profile = (await response.json()).reverse()
+  profile = setProfiles(profile, options)
+  return profile
 }
 
-//This returns only the profiles for the period selected
-export function setProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> {
+//This returns default profile settings for the period selected
+export async function setProfiles(profile, options: ResponseSettings): Promise<BasalProfile[]> {
+  console.log('setProfiles started')
   const basalProfiles: Array<any> = []
   let start = false
   for (let i = 0; i < profile.length; i++) {
@@ -23,34 +23,35 @@ export function setProfile(dateStart: Date, dateEnd: Date): Array<BasalProfile> 
       i + 1 < profile.length ? profile[i + 1].startDate : new Date()
     )
     let basalProfile = {
-      basal: obj.store.Default.basal,
       startDate: startDate,
       endDate: endDate,
-      isf: obj.store.Default.sens,
+      basal: obj.store.Default.basal,
       carbRatio: obj.store.Default.carbratio,
+      isf: obj.store.Default.sens,
       lowTarget: obj.store.Default.target_low,
       highTarget: obj.store.Default.target_high
     }
-    if (dateStart > startDate && dateStart < endDate) {
+    if (options.dateStart > startDate && options.dateStart < endDate) {
       basalProfiles.push(basalProfile)
       start = true
-    } else if (dateEnd > startDate && dateEnd < endDate) {
+    } else if (options.dateEnd > startDate && options.dateEnd < endDate) {
       basalProfiles.push(basalProfile)
       break
     } else if (start) {
       basalProfiles.push(basalProfile)
     }
   }
+  console.log('Basal Profiles111111111111:', basalProfiles)
   return basalProfiles
 
 }
 
-export async function getBG(url: String, dateStart: Date, dateEnd: Date): Promise<Array<Array<BG>>> {
-  const bgUrl = url.concat(
+export async function getBG(options): Promise<Array<Array<BG>>> {
+  const bgUrl = options.url.concat(
     'api/v1/entries/sgv.json?find[dateString][$gte]=',
-    dateStart.toISOString(),
+    options.dateStart.toISOString(),
     '&find[dateString][$lte]=',
-    dateEnd.toISOString(),
+    options.dateEnd.toISOString(),
     '&count=1000000'
   )
 
@@ -125,88 +126,60 @@ export async function getTempBasal(url: String, dateStart: Date, dateEnd: Date):
   return tempBasals
 }
 
-export async function getAllBoluses(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
-  const bolusUrl = url.concat(
+// export async function getCarbCorrections(url: String, dateStart: Date, dateEnd: Date): Promise<Array<TempBasal>> {
+//   const carbCorrectionUrl = url.concat(
+//     'api/v1/treatments.json?find[created_at][$gte]=',
+//     dateStart.toISOString(),
+//     '&find[created_at][$lte]=',
+//     dateEnd.toISOString(),
+//     '&find[eventType]=Carb+Correction',
+//     '&count=1000000'
+//   )
+//   console.log('Grabbing Bolus Data from Nightscout...', [{ carbCorrectionUrl }],carbCorrectionUrl)
+//   const response1 = await fetch(carbCorrectionUrl)
+//   const carbCorrectionJSON = await response1.json()
+
+//   console.log('Success(' + getSize(carbCorrectionJSON) + ' KB)')
+//   return carbCorrectionJSON;
+// }
+
+function getSize(obj: JSON): number {
+  return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
+}
+
+
+export async function getAllBoluses(options): Promise<Array<TempBasal>> {
+  const carbCorrectionUrl = options.url.concat(
+    'api/v1/treatments.json?find[created_at][$gte]=',
+    options.dateStart.toISOString(),
+    '&find[created_at][$lte]=',
+    options.dateEnd.toISOString(),
+    '&find[eventType]=Carb+Correction',
+    '&count=1000000'
+  )
+  console.log('Grabbing Bolus Data from Nightscout...', [{ carbCorrectionUrl }],carbCorrectionUrl)
+  const response1 = await fetch(carbCorrectionUrl)
+  const carbCorrectionJSON = await response1.json()
+
+  console.log('Success(' + getSize(carbCorrectionJSON) + ' KB)')
+  const bolusUrl = options.url.concat(
     'api/v1/treatments.json?find[$or][0][created_at][$gte]=',
-    dateStart.toISOString(),
-    '&find[$or][0][created_at][$lte]=',
-    dateEnd.toISOString(),
-    '&find[$or][0][eventType]=Carb+Correction',
-    '&find[$or][1][created_at][$gte]=',
-    dateStart.toISOString(),
-    '&find[$or][1][created_at][$lte]=',
-    dateEnd.toISOString(),
-    '&find[$or][1][eventType]=Correction+Bolus'
+    options.dateStart.toISOString(),
+    '&find[created_at][$lte]=',
+    options.dateEnd.toISOString(),
+    '&find[eventType]=Correction+Bolus'
   )
   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
-  const response = await fetch(bolusUrl)
-  const bolusJSON = await response.json()
+  const response2 = await fetch(bolusUrl)
+  const bolusJSON = await response2.json()
 
   console.log('Success(' + getSize(bolusJSON) + ' KB)')
+  //prepend carbCorrectionJSON to bolusJSON
+  bolusJSON.unshift(...carbCorrectionJSON)
+
   return bolusJSON;
 }
 
 function getSize(obj: JSON): number {
   return Math.round((new TextEncoder().encode(JSON.stringify(obj)).length / 1024) * 10) / 10
 }
-
-//Maybe useful to save
-
-// //This gets the correction bolus data (all boluses are correction boluses in NS)
-// export async function getCarbCorrections(
-//   url: String,
-//   dateStart: Date,
-//   dateEnd: Date
-// ): Promise<Array<TempBasal>> {
-//   const bolusUrl = url.concat(
-//     'api/v1/treatments.json?find[created_at][$gte]=',
-//     dateStart.toISOString(),
-//     '&find[created_at][$lte]=',
-//     dateEnd.toISOString(),
-//     '&find[eventType]=Carb+Correction',
-//   )
-
-//   console.log('Grabbing Bolus Data from Nightscout...', [{ bolusUrl }],bolusUrl)
-//   const response = await fetch(bolusUrl)
-//   const bolusJSON = await response.json()
-
-//   console.log('Success(' + getSize(bolusJSON) + ' KB)')
-//   return bolusJSON;
-// }
-
-//TODO: Possibly get the ISF from loop instead of having the user input it
-// function getIsfProfile(dateStart: Date, dateEnd: Date){
-//     const isfProfiles: Array<any> = []
-
-//     let start = false
-//     for(let i = 0; i < profile.length; i++){
-//         let obj = profile[i]
-//         let startDate = new Date(obj.startDate)
-//         let endDate = new Date(i+1 < profile.length ? profile[i+1].startDate : new Date())
-//         obj.store.Default.sens.map((sensObj: any)=>{
-//             sensObj.time = new Date(startDate.toISOString().split("T")[0] + "T" + sensObj.time)
-//         })
-
-//         let isfProfile = {
-//             profile: obj.store.Default.sens,
-//             startDate: startDate,
-//             endDate: endDate
-//         }
-//         if (dateStart > startDate && dateStart < endDate){
-//             isfProfiles.push(isfProfile)
-//             start = true
-//         }
-
-//         else if (dateEnd > startDate && dateEnd < endDate){
-//             isfProfiles.push(isfProfile)
-//             break;
-//         }
-//         else if(start){
-//             isfProfiles.push(isfProfile)
-//         }
-//     }
-
-//     console.log(isfProfiles)
-
-//     return isfProfiles
-// }
