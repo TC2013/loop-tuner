@@ -1,5 +1,3 @@
-import { options } from './index'
-
 //////////Begin cookie related functions. TODO: move this to own file.//////////
 export function checkCookies() {
   // Check if cookies are enabled // Check if there are any cookies for the site
@@ -28,7 +26,7 @@ export function checkCookies() {
       }
     } 
   } else {
-    //Cookies not available.
+    console.log('No saved cookies.')
   }
 } checkCookies()
 

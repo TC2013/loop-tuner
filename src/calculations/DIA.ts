@@ -1,18 +1,9 @@
 //  import { options } from '../index';
- import * as basal from './basal';
- import * as misc from './misc';
  import * as GIR from './GIR';
  
  // Return the average Duration of Insulin Activity for each 5 minute period in the day. DIA is equal to the length of the GIR curve.
- export async function getDIA(options) {
-  // const profile = JSON.parse(localStorage.getItem('profile'))
-  // const bolusJSON = JSON.parse(localStorage.getItem('bolusJSON'));
-  // const tempBasals = JSON.parse(localStorage.getItem('tempBasals'))
-  const netTempBasals = await basal.getNetTempBasals()
-  const avgNetTempBasals = await basal.averageNetTempBasalsByPeriod(netTempBasals, options)
-  const avgNetBolusBasals = await basal.avgBolusBasalByPeriod(options)
-  const netBasals = misc.addBolusArrays(avgNetBolusBasals, avgNetTempBasals)
-  console.log('netBasals', netBasals,'avgNetBolusBasal',avgNetBolusBasals,'avgNetTempBasal',avgNetTempBasals)
+ export async function getDIA(options, netBasals) {
+
   let insulinDeliveredArr = new Array(575)
   for (let i = 0; i < 144; i++) {
       insulinDeliveredArr[i] = netBasals[i + 144];

@@ -1,17 +1,17 @@
 import * as loadData from './loadData'
 import * as cookie from './cookie'
-import * as DIA from './calculations/DIA'
+// import * as DIA from './calculations/DIA'
 
 export const options: ResponseSettings = {
   url: 'https://canning.herokuapp.com/',
-  dateStart: new Date('2022-12-03T00:00'),
+  dateStart: new Date('2022-12-04T00:00'),
   dateEnd: new Date('2022-12-06T00:00'),
   showBasalChart: false,
   showBGChart: true,
   showCOBChart: false,
   COBRate: 30,
   adjustBasalRates: true,
-  ISF: NaN,
+  ISF: 27,
   weight: 80,
   minBG: NaN,
   targetBG: 110,
@@ -30,7 +30,7 @@ async function actionPerformed(options: ResponseSettings) {
   console.log("actionPerformed started")
   cookie.checkCookies()
   loadData.rawData(options)
-  DIA.getDIA(options)
+  // loadControls()
 
 }
 actionPerformed(options)

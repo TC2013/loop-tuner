@@ -369,7 +369,7 @@ export async function avgBolusBasalByPeriod(options) {
 //       options: {}
 //   });
 // }
-
+//This is a copy of the original JAVA function using a program to covert it to JS
 function adjustAverageBGs(options, min, DIA, basalAverages) {
   const df = new DecimalFormat("#.##");
 
