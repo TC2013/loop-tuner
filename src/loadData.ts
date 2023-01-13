@@ -82,3 +82,37 @@ export async function rawData(options: ResponseSettings) {
     localStorage.setItem('bolusJSONDateEnd', bolusJSONDateEnd);
   }
 }
+
+export function save(item, storageType = "session") {
+  if (typeof item === 'object') {
+      item = JSON.stringify(item);
+  }
+  if (storageType === "local") {
+      localStorage.setItem('item', item);
+  } else {
+      sessionStorage.setItem('item', item);
+  }
+}
+
+export function get(name, storageType = "session") {
+  let item;
+  if (storageType === "local") {
+      item = localStorage.getItem(name);
+  } else {
+      item = sessionStorage.getItem(name);
+  }
+  try {
+      item = JSON.parse(item);
+  } catch (e) {
+      // item is not a json string
+  }
+  return item;
+}
+
+export function clear(name, storageType = null) {
+  if (storageType === "local" || (storageType === null && localStorage.getItem(name))) {
+      localStorage.removeItem(name);
+  } else {
+      sessionStorage.removeItem(name);
+  }
+}
