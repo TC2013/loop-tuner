@@ -148,7 +148,7 @@ export async function loadBasalView() {
   hourInput.id = "hour";
   hourInput.value = 12;
   hourInput.setAttribute("readonly", "true")
-  hourInput.setAttribute("inputmode", "text")
+  // hourInput.setAttribute("inputmode", "text")
   hourInput.className = "controlFields"
   document.getElementById('basal-adjust-column-1').appendChild(hourInput);
   const button5 = document.createElement("button");
@@ -167,7 +167,7 @@ export async function loadBasalView() {
   minuteInput.id = "minute";
   minuteInput.value = "00";
   minuteInput.setAttribute("readonly", "true")
-  minuteInput.setAttribute("inputmode", "text")
+  // minuteInput.setAttribute("inputmode", "text")
   minuteInput.className = "controlFields"
   document.getElementById('basal-adjust-column-2').appendChild(minuteInput);
   const button6 = document.createElement("button");
@@ -186,7 +186,7 @@ export async function loadBasalView() {
   amPmInput.id = "am-pm";
   amPmInput.value = "AM";
   amPmInput.setAttribute("readonly", "true")
-  amPmInput.setAttribute("inputmode", "text")
+  // amPmInput.setAttribute("inputmode", "text")
   amPmInput.className = "controlFields"
   document.getElementById('basal-adjust-column-3').appendChild(amPmInput);
   const button7 = document.createElement("button");
@@ -205,7 +205,7 @@ export async function loadBasalView() {
   rate.id = "rate";
   rate.value = "0.00";
   rate.setAttribute("readonly", "true")
-  rate.setAttribute("inputmode", "text")
+  // rate.setAttribute("inputmode", "text")
   rate.className = "controlFields"
   document.getElementById('basal-adjust-column-4').appendChild(rate);
   const button8 = document.createElement("button");
@@ -251,24 +251,31 @@ var avgBGs = []
 var adjustedBasals = []
 var adjustedBGs = []
 
-function predictBGs() {
-  adjustedBasals = createAdjustedBasal()
-  console.log('adjustedBasals22222222222222222222', adjustedBasals)
-  adjustedBGs = createAdjustedBGs()
-  console.log('adjustedBGs22222222222222222', adjustedBGs)
-  applyInsulin()
-  let DIA = DIA.getDIA(options, adjustedBasals)
-  let hour = document.getElementById("hour").value;
-  let minute = document.getElementById("minute").value;
-  let amPm = document.getElementById("am-pm").value;
-  if(amPm === "PM") {hour = parseInt(hour) + 12};
-  let currentPosition = hour * 12 + Math.floor(minute / 5)
+async function predictBGs() {
+  if (adjustedBasals.length == 0) {adjustedBasals = createAdjustedBasal()}
+  if (adjustedBGs.length == 0) {adjustedBGs = createAdjustedBGs()}
+  
+  let currentPosition = getCurrentPosition()
+  let insulin = document.getElementById('rate').value - adjustedBasals[currentPosition] / 6;
+  let DIA_Arr = await applyInsulin()
+  
+  console.log('DIA_Arr', DIA_Arr)
   for (let i = 0; i < 6; i++){
-    for (let j = 0; j < DIA[currentPosition]; j++){
-      adjustedBGs[currentPosition + i].bg = avgBGs[currentPosition + i].bg - insulin / 6 * options.ISF / DIA[currentPosition + i]
+    for (let j = 0; j < Math.round(DIA_Arr[currentPosition + 144]); j++){
+      if (currentPosition + j > 287) 
+      {
+        adjustedBGs[currentPosition + j - 288].bg = adjustedBGs[currentPosition + j - 288].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j - 288]))
+      }
+      else 
+      {
+      adjustedBGs[currentPosition + j].bg = adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j]))
+      }
     }
   }
 
+  let combinedBGs = [adjustedBGs, avgBGs]
+  console.log('combinedBGs', combinedBGs)
+  chart.renderChart(combinedBGs, 'bg-chart')
 }
 
 function createAdjustedBasal() {
@@ -287,34 +294,42 @@ function createAdjustedBGs() {
   return adjustedBGs
 }
 
-function applyInsulin(){
-  let hour = document.getElementById("hour").value;
-  let minute = document.getElementById("minute").value;
-  let amPm = document.getElementById("am-pm").value;
-  if(amPm === "PM") {hour = parseInt(hour) + 12};
-  let currentPosition = hour * 12 + Math.floor(minute / 5)
+async function applyInsulin(){
+  console.log('adjustedBasals111111111111aaaaaaaaaa', adjustedBasals)
+  let currentPosition = getCurrentPosition()
   for(let i = 0; i < 6; i++){
     let insulin = Number(document.getElementById('rate').value) / 6;
     console.log('insulin', insulin, 'adjustedBasals[cp]', adjustedBasals[currentPosition + i])
     adjustedBasals[currentPosition + i] = insulin
   }
+  console.log('adjustedBasals222222222222bbbbbbbbbb', adjustedBasals)
+  let DIA_Arr = await DIA.getDIA(options, adjustedBasals)
+  console.log('DIA_Arr11111111111111111111', DIA_Arr)
+  return DIA_Arr
 }
+
 function setBasal() {
-  let hour = document.getElementById("hour").value;
-  let minute = document.getElementById("minute").value;
-  let amPm = document.getElementById("am-pm").value;
-  if(amPm === "PM") {hour = parseInt(hour) + 12};
-  let currentPosition = hour * 12 + Math.floor(minute / 5)
-  // let rate = document.getElementById("rate")?.innerText;
+  let currentPosition = getCurrentPosition()
   let basalRate = netBasals.slice(currentPosition, currentPosition + 6).reduce((a, b) => a + b, 0);
   basalRate = roundToNearest(basalRate, .05)
   document.getElementById("rate").value = basalRate
 
 }
 
+function getCurrentPosition() {
+  let hour = document.getElementById("hour").value;
+  let minute = Number(document.getElementById("minute").value)
+  let amPm = document.getElementById("am-pm").value;
+  if(hour === "12" && amPm ==="AM") {hour = 0};
+  if(amPm === "PM") {hour = parseInt(hour) + 12};
+  let currentPosition = hour * 12 + Math.floor(minute / 5)
+  return currentPosition
+}
+
 function roundToNearest(n, nearest) {
   return Math.round(n / nearest) * nearest;
 }
+
 async function getData() {
   const netTempBasals = basal.getNetTempBasals()
   const avgNetTempBasals = basal.averageNetTempBasalsByPeriod(netTempBasals, options)
@@ -324,7 +339,7 @@ async function getData() {
   netBasals = misc.addBolusArrays(avgNetBolusBasals, avgNetTempBasals)
   const bgArr = JSON.parse(localStorage.getItem('bgArr'))
   avgBGs = BG.averageBGs(bgArr)
-  console.log('avgBGs', avgBGs)
+  console.log('avgBGsZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ', avgBGs)
   console.log('netBasals', netBasals)
   
   setBasal()

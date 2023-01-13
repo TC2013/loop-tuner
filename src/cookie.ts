@@ -10,10 +10,10 @@ export function checkCookies() {
     var days = getCookie("days");
 
     // Enter the values into their respective elements
-    document.getElementById("url").value = url;
-    document.getElementById("isf").value = isf;
-    document.getElementById("weight").value = weight;
-    document.getElementById("days").value = days;
+    // document.getElementById("url").value = url;
+    // document.getElementById("isf").value = isf;
+    // document.getElementById("weight").value = weight;
+    // document.getElementById("days").value = days;
   
     // Function to get the value of a specific cookie
     function getCookie(name) {

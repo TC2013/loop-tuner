@@ -3,8 +3,8 @@
  
  // Return the average Duration of Insulin Activity for each 5 minute period in the day. DIA is equal to the length of the GIR curve.
  export async function getDIA(options, netBasals) {
-
-  let insulinDeliveredArr = new Array(575)
+  console.log('DIA started')
+  let insulinDeliveredArr = new Array(576)
   for (let i = 0; i < 144; i++) {
       insulinDeliveredArr[i] = netBasals[i + 144];
       insulinDeliveredArr[i + 144] = netBasals[i];

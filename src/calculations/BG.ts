@@ -32,12 +32,12 @@ export function averageBGs(bgsArray: Array<Array<BG>>): Array<BG> {
       const average = sum.reduce((a, b) => a + b) / sum.length;
       averageBGs.push({
         bg: average,
-        time: new Date(new Date("1970-01-01T00:00").setMinutes(j * 5))
+        time: new Date(new Date("1985-10-21T00:00").setMinutes(j * 5))
       })
     }
-    for (let i = 0; i < averageBGs.length; i++) {
-      averageBGs[i].bg = Math.round(averageBGs[i].bg);
-    }
+    // for (let i = 0; i < averageBGs.length; i++) {
+    //   averageBGs[i].bg = Math.round(averageBGs[i].bg);
+    // }
     return averageBGs
   } else if (allBGs.length === 1){
     let averageBGs = []
