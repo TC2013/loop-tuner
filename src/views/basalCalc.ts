@@ -261,16 +261,27 @@ async function predictBGs() {
   
   console.log('DIA_Arr', DIA_Arr)
   for (let i = 0; i < 6; i++){
+    currentPosition = currentPosition + i
+    let array = []
+    console.log('DIA_Arr[currentPosition + 144] = ', Math.round(DIA_Arr[currentPosition + 144]))
     for (let j = 0; j < Math.round(DIA_Arr[currentPosition + 144]); j++){
+      
+      array.push(j)
       if (currentPosition + j > 287) 
       {
         adjustedBGs[currentPosition + j - 288].bg = adjustedBGs[currentPosition + j - 288].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j - 288]))
       }
       else 
       {
+      console.log(currentPosition + j,adjustedBGs[currentPosition + j].bg, '-', (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])), '=',adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])))
+
       adjustedBGs[currentPosition + j].bg = adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j]))
+
+      console.log('and the new rate is set to:',adjustedBGs[currentPosition + j].bg)
       }
-    }
+    } 
+    console.log('array', array)
+    currentPosition = getCurrentPosition()
   }
 
   let combinedBGs = [adjustedBGs, avgBGs]
