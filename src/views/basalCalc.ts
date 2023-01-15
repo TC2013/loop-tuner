@@ -9,6 +9,7 @@ import * as DIA from '../calculations/DIA'
   window.loadBasalView = loadBasalView;
 })()
 
+
 export async function loadBasalView() {  
   console.log('loadBasalView started')
   var main = document.getElementById('main');
@@ -242,10 +243,227 @@ export async function loadBasalView() {
   const getBasalGoButton = document.getElementById("basal-go-button");
   getBasalGoButton.addEventListener("click", predictBGs);
  
+//Everything past this is a test:
 
+ 
+
+  // create number field
+  var numberField = document.createElement("input");
+  numberField.setAttribute("type", "number");
+  numberField.setAttribute("id", "number-field");
+  numberField.style.height = "25px";
+  numberField.style.width = "75px";
+  document.getElementById('mod-basal').appendChild(numberField);
+
+  // create button
+  var button = document.createElement("button");
+  button.innerHTML = "Submit";
+  button.style.height = "25px";
+  button.style.width = "75px";
+  button.addEventListener("click", function() {
+    var insulinKG = document.getElementById("number-field").value;
+    GIRCurve(insulinKG);
+  });
+  document.getElementById('mod-basal').appendChild(button);
+
+
+
+
+
+  function GIRCurve(insulinKG) {
+    let xData = new Array(1920);
+    for (let i = 0; i < 1920; i++) {
+      let x = i * (15.0/3600);
+      xData[i] = x;
+    };
+    let smallYData = getSmallYData(xData);
+    let mediumYData = getMediumYData(xData);
+    let largeYData = getLargeYData(xData);
+    let newCurveY= new Array(1920);
+    let smallMedium = new Array(smallYData.length);
+    let mediumLarge = new Array(mediumYData.length);
+    let large = new Array(largeYData.length);
+    if(insulinKG < .15) {
+      for(let i = 0; i < smallMedium.length; i++) {
+        if(insulinKG < .2) 
+          {
+            smallMedium[i] = smallYData[i] / mediumYData[i]
+          }
+        else if(insulinKG == .2) 
+          {
+            newCurveY[i] = mediumYData[i] 
+          }
+        else if(insulinKG > .2 && insulinKG < .4) 
+          {
+            mediumLarge[i] = mediumYData[i] / largeYData[i] 
+          }
+        else if(insulinKG >= .4) 
+          {
+            newCurveY[i] = largeYData[i] 
+          }
+      }
+    }
+   
+    if(insulinKG >= .15 && insulinKG <= .3) {
+      for(let i = 0; i < mediumLarge.length; i++) {
+        if(insulinKG < .2) 
+          {
+            smallMedium[i] = smallYData[i] / mediumYData[i]
+          }
+        else if(insulinKG == .2) 
+          {
+            newCurveY[i] = mediumYData[i] 
+          }
+        else if(insulinKG > .2 && insulinKG < .4) 
+          {
+            mediumLarge[i] = mediumYData[i] / largeYData[i] 
+          }
+        else if(insulinKG >= .4) 
+          {
+            newCurveY[i] = largeYData[i] 
+          }
+      }
+    }
+   
+    if(insulinKG > .3) {
+      for(let i = 0; i < large.length; i++) {
+        if(insulinKG < .2) 
+          {
+            smallMedium[i] = smallYData[i] / mediumYData[i]
+          }
+        else if(insulinKG == .2) 
+          {
+            newCurveY[i] = mediumYData[i] 
+          }
+        else if(insulinKG > .2 && insulinKG < .4) 
+          {
+            mediumLarge[i] = mediumYData[i] / largeYData[i] 
+          }
+        else if(insulinKG >= .4) 
+          {
+            newCurveY[i] = largeYData[i] 
+          }
+      }
+    }
+   
+      if (insulinKG < .2) {
+        for(let i = 0; i < newCurveY.length; i++) {
+          let pow = -1.44269504088897 * Math.log(insulinKG) - 3.32192809488739;
+          let yRate = -0.0455826595478078 * xData[i] + 0.9205489113464720;
+          let yDiff = Math.pow(yRate, pow) * smallMedium[i];
+          let yMultiplier = Math.pow(yDiff, pow);
+          newCurveY[i] = smallYData[i] * yMultiplier;
+        }
+      }
+      if (insulinKG > .2 && insulinKG < .4) {
+        for(let i = 0; i < newCurveY.length; i++) {
+          let pow = -1.44269504088897 * Math.log(insulinKG) - 3.32192809488739;
+          let yRate = -0.0455826595478078 * xData[i] + 0.9205489113464720;
+          let yDiff = Math.pow(yRate, pow) * mediumLarge[i];
+          let yMultiplier = Math.pow(yDiff, pow);
+          newCurveY[i] = mediumYData[i] * yMultiplier;
+        }
+      }
+  
+    
+    let peakValue = 0;
+      for(let i of newCurveY) {
+        if(i > peakValue) {
+            peakValue = i;
+        }
+      }
+    let newCurveYChop = []
+    let stop = peakValue *.01;
+    // let count = 0; // count keeps track of how many positions we are going to include in the curve (the number of positions before stop)
+    for(let i = 0; i < newCurveY.length; i++) {
+        if(newCurveY[i] > stop) {
+          newCurveYChop.push = newCurveY[i];
+        }
+        // if (!isNaN((15.0 / 3600) * (smallYData[i] * yMultiplier)) && (15.0) * (smallYData[i] * yMultiplier) > stop)
+        //     {count++;}
+        // if(i > 50 && newCurveY[i] < stop)
+        //     {i = 9999999;}
+    }
+    plotLineGraph(newCurveY, insulinKG)
+    // console.log('newCurveYChop', newCurveYChop)
+    return newCurveYChop
+  }
+   
+  function getSmallYData(smallXData) {
+    //using the .1 U/kg curve
+    let smallYData = new Array(1920);
+    for (let i = 0; i < smallYData.length; i++) {
+      let x = smallXData[i];
+      let y = 0.0033820425120803 * Math.pow(x, 5) - 0.0962642502970792 * Math.pow(x, 4) + 1.0161233494860400 * Math.pow(x, 3) -
+        4.7280409167367000 * Math.pow(x, 2) + 8.2811624637053000 * x - 0.4658832073238300;
+      smallYData[i] = y;
+    }
+    return smallYData;
+  }
+
+  function getMediumYData(mediumXData) {
+    //Using the .2 U/kg curve
+    let mediumYData = new Array(1920);
+    for (let i = 0; i < mediumXData.length; i++) {
+      let x = mediumXData[i];
+      let y = 0.0004449113905105 * Math.pow(x, 6) - 0.0097881251143144 * Math.pow(x, 5) + 0.0487062677027909 * Math.pow(x, 4) +
+        0.3395509285035820 * Math.pow(x, 3) - 3.8635372657493500 * Math.pow(x, 2) + 9.8215306047782600 * x - 0.5016675029655920;
+      mediumYData[i] = y;
+    }
+    return mediumYData;
+  }
+
+  function getLargeYData(largeXData) {
+    //Using the .4 U/kg curve
+    let largeYData = new Array(1920);
+    for (let i = 0; i < largeXData.length; i++) {
+      let x = largeXData[i];
+      let y = -0.0224550824431891 * Math.pow(x, 4) + 0.5324819868175370 * Math.pow(x, 3) - 4.2740977490209200 * Math.pow(x, 2) +
+        11.6354217632198000 * x - 0.0653457810255797;
+      largeYData[i] = y;
+    }
+    return largeYData;
+  }
+
+  function plotLineGraph(data, insulinKG) {
+    // create new div to hold the chart
+    var chartContainer = document.createElement("div");
+    chartContainer.style.width = "800px";
+    // chartContainer.style.height = "300px";
+    chartContainer.style.background = "white";
+    document.body.appendChild(chartContainer);
+  
+    var canvas = document.createElement("canvas");
+    chartContainer.appendChild(canvas);
+  
+    var ctx = canvas.getContext("2d");
+    var chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: Array.from(Array(data.length).keys()),
+        datasets: [
+          {
+            label: `insulinKG: ${insulinKG}`,
+            data: data,
+            borderColor: "black",
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            maxTicksLimit: 5
+          }
+        }
+      }
+    });
+  }
+  
+  
 }
 
-//initalizing these outside of the function so they can be used in other functions
+// //initalizing these outside of the function so they can be used in other functions
 var netBasals = []
 var avgBGs = []
 var adjustedBasals = []
@@ -258,12 +476,11 @@ async function predictBGs() {
   let currentPosition = getCurrentPosition()
   let insulin = document.getElementById('rate').value - adjustedBasals[currentPosition] / 6;
   let DIA_Arr = await applyInsulin()
-  
-  console.log('DIA_Arr', DIA_Arr)
+  console.log('adjustedBGs =++++++++++++++++++++++ ', adjustedBGs)
   for (let i = 0; i < 6; i++){
     currentPosition = currentPosition + i
     let array = []
-    console.log('DIA_Arr[currentPosition + 144] = ', Math.round(DIA_Arr[currentPosition + 144]))
+    // console.log('DIA_Arr[currentPosition + 144] = ', Math.round(DIA_Arr[currentPosition + 144]))
     for (let j = 0; j < Math.round(DIA_Arr[currentPosition + 144]); j++){
       
       array.push(j)
@@ -273,17 +490,17 @@ async function predictBGs() {
       }
       else 
       {
-      console.log(currentPosition + j,adjustedBGs[currentPosition + j].bg, '-', (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])), '=',adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])))
+      console.log(currentPosition + j,adjustedBGs[currentPosition + j].bg, '-',(insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])), '=',adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j])) )
 
       adjustedBGs[currentPosition + j].bg = adjustedBGs[currentPosition + j].bg - (insulin * options.ISF / Math.round(DIA_Arr[currentPosition + j]))
-
       console.log('and the new rate is set to:',adjustedBGs[currentPosition + j].bg)
       }
     } 
-    console.log('array', array)
+
     currentPosition = getCurrentPosition()
   }
-
+  console.log('avgBGs', avgBGs)
+  console.log('adjustedBGs', adjustedBGs)
   let combinedBGs = [adjustedBGs, avgBGs]
   console.log('combinedBGs', combinedBGs)
   chart.renderChart(combinedBGs, 'bg-chart')
@@ -299,9 +516,9 @@ function createAdjustedBasal() {
 
 function createAdjustedBGs() {
   console.log('createAdjustedBGs ran')
-  for(let i = 0; i < avgBGs.length; i++){
-    adjustedBGs.push(avgBGs[i])
-  }
+  avgBGs.map((bg) => {
+    adjustedBGs.push(bg)
+  })
   return adjustedBGs
 }
 
@@ -315,7 +532,6 @@ async function applyInsulin(){
   }
   console.log('adjustedBasals222222222222bbbbbbbbbb', adjustedBasals)
   let DIA_Arr = await DIA.getDIA(options, adjustedBasals)
-  console.log('DIA_Arr11111111111111111111', DIA_Arr)
   return DIA_Arr
 }
 
@@ -350,6 +566,7 @@ async function getData() {
   netBasals = misc.addBolusArrays(avgNetBolusBasals, avgNetTempBasals)
   const bgArr = JSON.parse(localStorage.getItem('bgArr'))
   avgBGs = BG.averageBGs(bgArr)
+  Object.freeze(avgBGs);
   console.log('avgBGsZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ', avgBGs)
   console.log('netBasals', netBasals)
   

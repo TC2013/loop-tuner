@@ -47,11 +47,13 @@ export function GIRCurve(insulinKG) {
       let yRate = -0.0455826595478078 * smallXData[i] + 0.9205489113464720;
       let yDiff = Math.pow(yRate, pow) * smallMedium[i];
       let yMultiplier = Math.pow(yDiff, pow);
-      let value = smallYData[i] * yMultiplier;
-      if(i != 0 && Math.abs(newCurveY[i-1] - value) > .05)
-          {newCurveY[i] = newCurveY[i-1];}
-      else
-          {newCurveY[i] = value;}
+
+      newCurveY[i] = smallYData[i] * yMultiplier;
+      // let value = smallYData[i] * yMultiplier;
+      // if(i != 0 && Math.abs(newCurveY[i-1] - value) > .05)
+      //     {newCurveY[i] = newCurveY[i-1];}
+      // else
+          // {newCurveY[i] = value;}
     }
   
   let peakValue = 0;
@@ -70,36 +72,38 @@ export function GIRCurve(insulinKG) {
       let yRate = -0.0455826595478078 * smallXData[i] + 0.9205489113464720;
       let yDiff = Math.pow(yRate, pow) * smallMedium[i];
       let yMultiplier = Math.pow(yDiff, pow);
-      let value = smallYData[i] * yMultiplier;
-      if(i != 0 && Math.abs(newCurveY[i-1] - value) > .05)
-          {newCurveY[i] = newCurveY[i-1];}
-      else
-          {newCurveY[i] = value;}
+      newCurveY[i] = smallYData[i] * yMultiplier;
+      // let value = smallYData[i] * yMultiplier;
+      // if(i != 0 && Math.abs(newCurveY[i-1] - value) > .05)
+      //     {newCurveY[i] = newCurveY[i-1];}
+      // else
+      //     {newCurveY[i] = value;}
 
-      if (!isNaN((15.0 / 3600) * (smallYData[i] * yMultiplier)) && (15.0) * (smallYData[i] * yMultiplier) > 0)
+      if (!isNaN((15.0 / 3600) * (smallYData[i] * yMultiplier)) && (15.0) * (smallYData[i] * yMultiplier) > stop)
           {count++;}
       if(i > 50 && newCurveY[i] < stop)
           {i = 9999999;}
   }
   // console.log('newCurveY', newCurveY)
-  const newCurveChopY = new Array(count);
-  const newCurveChopX = new Array(count);
-  let count0 = 0; // Count the number of data points that are below 0 at the beginning of our curve. We use this so that we don't include them
-  for(let i = 0; i < newCurveChopY.length+count0; i++) {
-      let x = (i-count0) * (15.0/3600);
-      // console.log(x)
-      if(newCurveY[i] > 0)
-      {
-          newCurveChopY[i-count0] += newCurveY[i];
-          newCurveChopX[i-count0] += x;
-      }
-      else
-      {
-          count0++;
-      }
-  }
-  // console.log('newCurveChopY', newCurveChopY)
-  return newCurveChopY;
+  // const newCurveChopY = new Array(count);
+  // const newCurveChopX = new Array(count);
+  // let count0 = 0; // Count the number of data points that are below 0 at the beginning of our curve. We use this so that we don't include them
+  // for(let i = 0; i < newCurveChopY.length-count0; i++) {
+  //     let x = (i-count0) * (15.0/3600);
+  //     if(newCurveY[i] > 0)
+  //     {
+  //         newCurveChopY[i-count0] = newCurveY[i];
+  //         newCurveChopX[i-count0] = x;
+  //     }
+  //     else
+  //     {
+  //         count0++;
+  //     }
+  // }
+// console.log('newCurveChopY', newCurveChopY)
+  // return newCurveChopY
+  console.log('newCurveY', newCurveY)
+  return newCurveY
 }
   function getSmallYData(smallXData) {
     //using the .1 U/kg curve

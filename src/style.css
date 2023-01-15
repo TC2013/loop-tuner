@@ -87,7 +87,7 @@ BEGIN CSS FOR BASAL CALCULATOR VIEW
 }
 
 #chart-container{
-  width: 100%;
+
   margin-top: 5px;
   align-items: center;
   justify-content: center;
@@ -98,7 +98,7 @@ BEGIN CSS FOR BASAL CALCULATOR VIEW
   border-radius: 15px;
   transition: 1s;
   height: 100%;
-  width: 100%;
+  /* width: 100%; */
 
 }
 
