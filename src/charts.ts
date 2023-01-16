@@ -1,9 +1,9 @@
 import { Chart } from 'chart.js/auto'
 
-//The Chart function below is designed to hand avgBgArray and avgBgArrayMobileView,which data sctructure is [{ {},{},{} }]
+//The Chart function below is designed to handle avgBgArray and avgBgArrayMobileView,which data sctructure is [{ {},{},{} }]
 export function renderChartMobileView(avgBgArray, containerId) {
-  // Check is bg-chart is present and remove if is.
-  Chart.getChart('bg-chart')?.destroy()
+  // Check is chart is present and remove if is.
+  Chart.getChart('containerId')?.destroy()
   // Extract the data and labels from the bgArray
   let labels = avgBgArray.map((hour) => {
 
@@ -113,5 +113,3 @@ export function renderChart(bgArray, containerId) {
     },
   });
 }
-
-
