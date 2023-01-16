@@ -269,8 +269,10 @@ export async function loadBasalView() {
 
  // create graph of GIR curves
  function graphCurves() {
-    // let curve1 = GIRCurve(.01)
-    // let curve2 = GIRCurve(.05)
+    let curve1 = GIRCurve(.01)
+    let curve1_2 = GIRCurve(.025)
+    let curve2 = GIRCurve(.05)
+    let curve2_2 = GIRCurve(.075)
     let curve3 = GIRCurve(.1)
     let curve4 = GIRCurve(.125)
     let curve5 = GIRCurve(.15)
@@ -281,14 +283,11 @@ export async function loadBasalView() {
     let curve10 = GIRCurve(.35)
     let curve11 = GIRCurve(.4)
     let curve12 = GIRCurve(.45)
-    let curves = [curve3, curve4, curve5, curve6, curve7, curve8, curve9, curve10, curve11, curve12]
-    let insulinKGs = [.1, .125, .15, .175, .2, .25, .3, .35, .4, .45]
+    let curves = [curve1, curve1_2,curve2,curve2_2, curve3, curve4, curve5, curve6, curve7, curve8, curve9, curve10, curve11]
+    let insulinKGs = [.01, .025, .05, .075, .1, .125, .15, .175, .2, .25, .3, .35, .4]
     // let insulinKGs = [.01, .05, .1, .125, .15, .175, .2, .25, .3, .35, .4, .45]
     plotLineGraph(curves, insulinKGs)
  }
-
-
-
 
 
   function GIRCurve(insulinKG) {
@@ -343,31 +342,52 @@ export async function loadBasalView() {
       else if(largeYData[i] > stopLarge){largeCurve.push(largeYData[i]);}
     }
 
-    let newCurve= []
+    let newCurveFull = []
+    let newCurve = []
+    if(insulinKG < .1) {
+      let smallYData = getSmallYData(xData);
+      let mediumYData = getMediumYData(xData);
+      let smallMedium = new Array(smallYData.length);
+        for(let i = 0; i < smallMedium.length; i++) {
+          smallMedium[i] = smallYData[i] / mediumYData[i];
+        }
+      for(let i = 0; i < 1920; i++) {
+        let pow = -1.44269504088897 * Math.log(insulinKG) - 3.32192809488739;
+         let yRate = -0.0455826595478078 * xData[i] + 0.9205489113464720;
+         let yDiff = Math.pow(yRate, pow) * smallMedium[i];
+         let yMultiplier = Math.pow(yDiff, pow);
+         let value = smallYData[i] * yMultiplier;
+         if(i != 0 && Math.abs(newCurveFull[i-1] - value) > .05)
+             {newCurveFull[i] = newCurveFull[i-1];}
+         else
+             {newCurveFull[i] = value;}
+      }
+      let peakValue = 0;
+
+        for(let i of newCurveFull) {
+          if(i > peakValue) {
+              peakValue = i;
+          }
+        }
+      
+      let stop = peakValue *.0175;
+  
+      for (let i = 0; i < newCurveFull.length; i++) {
+        if(i < 60 && newCurveFull[i] > 0){newCurve.push(newCurveFull[i]);}
+        else if(newCurveFull[i] > stopSmall){newCurve.push(newCurveFull[i]);}
+      }
+    }
     
     if(insulinKG == .1) {newCurve = smallCurve;}
 
     else if(insulinKG > .1 && insulinKG < .2) {
-      let newCurveLength = smallCurve.length + ((mediumCurve.length - smallCurve.length) * (insulinKG - .1) / (.2 - .1));
-      console.log('newCurveLength', newCurveLength)
-      for(let i = 0; i < newCurveLength; i++) {
-        let percentage = i / newCurveLength;
-        let smallIndex = Math.round(smallCurve.length * percentage);
-        let mediumIndex = Math.round(mediumCurve.length * percentage);
-        newCurve[i] = (smallCurve[smallIndex] + mediumCurve[mediumIndex])  / 2;
-      } console.log('newCurve', newCurve.length)
+      newCurve = getIntermediateYData(xData, insulinKG)
     }
 
     else if(insulinKG == .2) {newCurve = mediumCurve;}
 
     else if(insulinKG > .2 && insulinKG < .4) {
-      let newCurveLength = mediumCurve.length + ((largeCurve.length - mediumCurve.length) * insulinKG - .2) / (.4 - .2);
-      for(let i = 0; i < newCurveLength; i++) {
-        let percentage = i / newCurveLength;
-        let mediumIndex = Math.round(mediumCurve.length * percentage);
-        let largeIndex = Math.round(largeCurve.length * percentage);
-        newCurve[i] = (mediumCurve[mediumIndex] + largeCurve[largeIndex])  / 2;
-      } console.log('newCurve', newCurve.length)
+      newCurve = getIntermediateYData(xData, insulinKG)
     }
 
     else if(insulinKG >= .4) {newCurve = largeCurve;}
@@ -376,6 +396,30 @@ export async function loadBasalView() {
     return newCurve;
   }
   
+  function getIntermediateYData(intermediateXData, insulinKG) {
+    let intermediateYData = new Array(intermediateXData.length);
+    for (let i = 0; i < intermediateXData.length; i++) {
+        let x = intermediateXData[i];
+        let smallY = 0.0033820425120803 * Math.pow(x, 5) - 0.0962642502970792 * Math.pow(x, 4) + 1.0161233494860400 * Math.pow(x, 3) -
+            4.7280409167367000 * Math.pow(x, 2) + 8.2811624637053000 * x - 0.4658832073238300;
+        let mediumY = 0.0004449113905105 * Math.pow(x, 6) - 0.0097881251143144 * Math.pow(x, 5) + 0.0487062677027909 * Math.pow(x, 4) +
+            0.3395509285035820 * Math.pow(x, 3) - 3.8635372657493500 * Math.pow(x, 2) + 9.8215306047782600 * x - 0.5016675029655920;
+        let largeY = -0.0224550824431891 * Math.pow(x, 4) + 0.5324819868175370 * Math.pow(x, 3) - 4.2740977490209200 * Math.pow(x, 2) +
+        11.6354217632198000 * x - 0.0653457810255797;
+        let intermediateY;
+        if(insulinKG < .1 ){
+            intermediateY = (insulinKG - 0.1) * (mediumY - smallY) / (0.2 - 0.1) + smallY;
+        }
+        else if(insulinKG > .1 && insulinKG < .2){
+            intermediateY = (insulinKG - 0.1) * (mediumY - smallY) / (0.2 - 0.1) + smallY;
+        }
+        else if(insulinKG > .2 && insulinKG < .4){
+            intermediateY = (insulinKG - 0.2) * (largeY - mediumY) / (0.4 - 0.2) + mediumY;
+        }
+        intermediateYData[i] = intermediateY;
+    }
+    return intermediateYData
+  }
    
   function getSmallYData(smallXData) {
     //using the .1 U/kg curve
