@@ -262,132 +262,120 @@ export async function loadBasalView() {
   button.style.width = "75px";
   button.addEventListener("click", function() {
     var insulinKG = document.getElementById("number-field").value;
-    GIRCurve(insulinKG);
+    // GIRCurve(insulinKG);
+    graphCurves();
   });
   document.getElementById('mod-basal').appendChild(button);
+
+ // create graph of GIR curves
+ function graphCurves() {
+    // let curve1 = GIRCurve(.01)
+    // let curve2 = GIRCurve(.05)
+    let curve3 = GIRCurve(.1)
+    let curve4 = GIRCurve(.125)
+    let curve5 = GIRCurve(.15)
+    let curve6 = GIRCurve(.175)
+    let curve7 = GIRCurve(.2)
+    let curve8 = GIRCurve(.25)
+    let curve9 = GIRCurve(.3)
+    let curve10 = GIRCurve(.35)
+    let curve11 = GIRCurve(.4)
+    let curve12 = GIRCurve(.45)
+    let curves = [curve3, curve4, curve5, curve6, curve7, curve8, curve9, curve10, curve11, curve12]
+    let insulinKGs = [.1, .125, .15, .175, .2, .25, .3, .35, .4, .45]
+    // let insulinKGs = [.01, .05, .1, .125, .15, .175, .2, .25, .3, .35, .4, .45]
+    plotLineGraph(curves, insulinKGs)
+ }
 
 
 
 
 
   function GIRCurve(insulinKG) {
+    console.log('insulinKG', insulinKG)
     let xData = new Array(1920);
     for (let i = 0; i < 1920; i++) {
       let x = i * (15.0/3600);
       xData[i] = x;
-    };
+    }
     let smallYData = getSmallYData(xData);
+    // console.log('smallYData', smallYData)
     let mediumYData = getMediumYData(xData);
     let largeYData = getLargeYData(xData);
-    let newCurveY= new Array(1920);
-    let smallMedium = new Array(smallYData.length);
-    let mediumLarge = new Array(mediumYData.length);
-    let large = new Array(largeYData.length);
-    if(insulinKG < .15) {
-      for(let i = 0; i < smallMedium.length; i++) {
-        if(insulinKG < .2) 
-          {
-            smallMedium[i] = smallYData[i] / mediumYData[i]
-          }
-        else if(insulinKG == .2) 
-          {
-            newCurveY[i] = mediumYData[i] 
-          }
-        else if(insulinKG > .2 && insulinKG < .4) 
-          {
-            mediumLarge[i] = mediumYData[i] / largeYData[i] 
-          }
-        else if(insulinKG >= .4) 
-          {
-            newCurveY[i] = largeYData[i] 
-          }
-      }
-    }
-   
-    if(insulinKG >= .15 && insulinKG <= .3) {
-      for(let i = 0; i < mediumLarge.length; i++) {
-        if(insulinKG < .2) 
-          {
-            smallMedium[i] = smallYData[i] / mediumYData[i]
-          }
-        else if(insulinKG == .2) 
-          {
-            newCurveY[i] = mediumYData[i] 
-          }
-        else if(insulinKG > .2 && insulinKG < .4) 
-          {
-            mediumLarge[i] = mediumYData[i] / largeYData[i] 
-          }
-        else if(insulinKG >= .4) 
-          {
-            newCurveY[i] = largeYData[i] 
-          }
-      }
-    }
-   
-    if(insulinKG > .3) {
-      for(let i = 0; i < large.length; i++) {
-        if(insulinKG < .2) 
-          {
-            smallMedium[i] = smallYData[i] / mediumYData[i]
-          }
-        else if(insulinKG == .2) 
-          {
-            newCurveY[i] = mediumYData[i] 
-          }
-        else if(insulinKG > .2 && insulinKG < .4) 
-          {
-            mediumLarge[i] = mediumYData[i] / largeYData[i] 
-          }
-        else if(insulinKG >= .4) 
-          {
-            newCurveY[i] = largeYData[i] 
-          }
-      }
-    }
-   
-      if (insulinKG < .2) {
-        for(let i = 0; i < newCurveY.length; i++) {
-          let pow = -1.44269504088897 * Math.log(insulinKG) - 3.32192809488739;
-          let yRate = -0.0455826595478078 * xData[i] + 0.9205489113464720;
-          let yDiff = Math.pow(yRate, pow) * smallMedium[i];
-          let yMultiplier = Math.pow(yDiff, pow);
-          newCurveY[i] = smallYData[i] * yMultiplier;
+    let smallCurve = [];
+    let mediumCurve = [];
+    let largeCurve = [];
+    let peakValueSmall = 0;
+    let peakValueMedium = 0;
+    let peakValueLarge = 0;
+      for(let i of smallYData) {
+        if(i > peakValueSmall) {
+            peakValueSmall = i;
         }
       }
-      if (insulinKG > .2 && insulinKG < .4) {
-        for(let i = 0; i < newCurveY.length; i++) {
-          let pow = -1.44269504088897 * Math.log(insulinKG) - 3.32192809488739;
-          let yRate = -0.0455826595478078 * xData[i] + 0.9205489113464720;
-          let yDiff = Math.pow(yRate, pow) * mediumLarge[i];
-          let yMultiplier = Math.pow(yDiff, pow);
-          newCurveY[i] = mediumYData[i] * yMultiplier;
+      for(let i of mediumYData) {
+        if(i > peakValueMedium) {
+            peakValueMedium = i;
         }
       }
-  
+      for(let i of largeYData) {
+        if(i > peakValueLarge) {
+            peakValueLarge = i;
+        }
+      }
     
-    let peakValue = 0;
-      for(let i of newCurveY) {
-        if(i > peakValue) {
-            peakValue = i;
-        }
-      }
-    let newCurveYChop = []
-    let stop = peakValue *.01;
-    // let count = 0; // count keeps track of how many positions we are going to include in the curve (the number of positions before stop)
-    for(let i = 0; i < newCurveY.length; i++) {
-        if(newCurveY[i] > stop) {
-          newCurveYChop.push = newCurveY[i];
-        }
-        // if (!isNaN((15.0 / 3600) * (smallYData[i] * yMultiplier)) && (15.0) * (smallYData[i] * yMultiplier) > stop)
-        //     {count++;}
-        // if(i > 50 && newCurveY[i] < stop)
-        //     {i = 9999999;}
+    let stopSmall = peakValueSmall *.0175;
+    let stopMedium = peakValueMedium *.0175;
+    let stopLarge = peakValueLarge *.0175;
+
+    for (let i = 0; i < smallYData.length; i++) {
+      if(i < 60 && smallYData[i] > 0){smallCurve.push(smallYData[i]);}
+      else if(smallYData[i] > stopSmall){smallCurve.push(smallYData[i]);}
     }
-    plotLineGraph(newCurveY, insulinKG)
-    // console.log('newCurveYChop', newCurveYChop)
-    return newCurveYChop
+
+    for (let i = 0; i < mediumYData.length; i++) {
+      if(i < 60 && mediumYData[i] > 0){mediumCurve.push(mediumYData[i]);}
+      else if(mediumYData[i] > stopMedium){mediumCurve.push(mediumYData[i]);}
+    }
+
+    for (let i = 0; i < largeYData.length; i++) {
+      if(i < 60 && largeYData[i] > 0){largeCurve.push(largeYData[i]);}
+      else if(largeYData[i] > stopLarge){largeCurve.push(largeYData[i]);}
+    }
+
+    let newCurve= []
+    
+    if(insulinKG == .1) {newCurve = smallCurve;}
+
+    else if(insulinKG > .1 && insulinKG < .2) {
+      let newCurveLength = smallCurve.length + ((mediumCurve.length - smallCurve.length) * (insulinKG - .1) / (.2 - .1));
+      console.log('newCurveLength', newCurveLength)
+      for(let i = 0; i < newCurveLength; i++) {
+        let percentage = i / newCurveLength;
+        let smallIndex = Math.round(smallCurve.length * percentage);
+        let mediumIndex = Math.round(mediumCurve.length * percentage);
+        newCurve[i] = (smallCurve[smallIndex] + mediumCurve[mediumIndex])  / 2;
+      } console.log('newCurve', newCurve.length)
+    }
+
+    else if(insulinKG == .2) {newCurve = mediumCurve;}
+
+    else if(insulinKG > .2 && insulinKG < .4) {
+      let newCurveLength = mediumCurve.length + ((largeCurve.length - mediumCurve.length) * insulinKG - .2) / (.4 - .2);
+      for(let i = 0; i < newCurveLength; i++) {
+        let percentage = i / newCurveLength;
+        let mediumIndex = Math.round(mediumCurve.length * percentage);
+        let largeIndex = Math.round(largeCurve.length * percentage);
+        newCurve[i] = (mediumCurve[mediumIndex] + largeCurve[largeIndex])  / 2;
+      } console.log('newCurve', newCurve.length)
+    }
+
+    else if(insulinKG >= .4) {newCurve = largeCurve;}
+
+    // plotLineGraph(newCurve, insulinKG)
+    return newCurve;
   }
+  
    
   function getSmallYData(smallXData) {
     //using the .1 U/kg curve
@@ -425,40 +413,47 @@ export async function loadBasalView() {
     return largeYData;
   }
 
-  function plotLineGraph(data, insulinKG) {
+  function plotLineGraph(data, legend) {
     // create new div to hold the chart
     var chartContainer = document.createElement("div");
-    chartContainer.style.width = "800px";
-    // chartContainer.style.height = "300px";
+    chartContainer.style.width = "1200px";
     chartContainer.style.background = "white";
     document.body.appendChild(chartContainer);
-  
+    
+    legend.reverse();
+    data.reverse();
+
     var canvas = document.createElement("canvas");
     chartContainer.appendChild(canvas);
   
     var ctx = canvas.getContext("2d");
+    var chartData = {
+        labels: Array.from(Array(data[0].length).keys()),
+        datasets: []
+    };
+    var colors = ["red", 'orange', 'yellow', 'green', "blue", 'indigo', "violet", "black", "brown", "pink"];
+    for (var i = 0; i < data.length; i++) {
+        chartData.datasets.push({
+            label: legend[i],
+            data: data[i],
+            borderColor: colors[i % colors.length],
+            pointRadius: 0,
+            fill: false
+        });
+    }
     var chart = new Chart(ctx, {
       type: "line",
-      data: {
-        labels: Array.from(Array(data.length).keys()),
-        datasets: [
-          {
-            label: `insulinKG: ${insulinKG}`,
-            data: data,
-            borderColor: "black",
-            pointRadius: 0
-          }
-        ]
-      },
+      data: chartData,
       options: {
         scales: {
           y: {
-            maxTicksLimit: 5
+            // maxTicksLimit: 5
           }
         }
       }
     });
-  }
+}
+
   
   
 }
